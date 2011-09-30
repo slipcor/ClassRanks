@@ -1,0 +1,52 @@
+#------------------#
+# General Settings #
+#------------------#
+rankpublic: true
+defaultrankallworlds: false
+signcheck: false
+signchoose: '[choose]'
+signrankup: '[rankup]'
+signrankdown: '[rankdown]'
+cooldown: 0
+
+#----------------#
+# Color Settings #
+#----------------#
+playercolor: '&e'
+worldcolor: '&6'
+
+#--------------#
+# SQL Settings #
+#--------------#
+MySQL: false
+MySQLhost:
+MySQLuser:
+MySQLpass:
+MySQLdb:
+
+#---------------------#
+# Money Cost Settings #
+#---------------------#
+prices:
+    1: '10.00'
+    2: '50.00'
+    3: '100.00'
+
+#--------------------#
+# Item Cost Settings #
+#--------------------#
+items:
+    I:
+        REDSTONE:2
+        COAL:2
+    II:
+        GOLD_INGOT:2
+        IRON_INGOT:3
+    III:
+        DIAMOND:5
+        LAPIS_BLOCK:5
+
+#------------------#
+# Config debugging #
+#------------------#
+cversion: '0143'
