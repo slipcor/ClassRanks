@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
 import praxis.slipcor.classranksBP.CRClasses;
 import praxis.slipcor.classranksBP.ClassRanks;
 
@@ -98,39 +98,42 @@ public class CRPlayers {
         return true;  
 	}
 
-	@SuppressWarnings("unchecked")
 	public static int coolDownCheck(Player comP) {
 		if ((comP.isOp()) || (CRClasses.coolDown == 0)) {
 			return 0; // if we do not want/need to calculate the cooldown, get out of here!
 		}
 		
 		File fConfig = new File(CRClasses.plugin.getDataFolder(),"cooldowns.yml");
-		YamlConfiguration config = new YamlConfiguration();
+
+        YamlConfiguration config = new YamlConfiguration();
+        
         
         if(fConfig.isFile()){
         	try {
     			config.load(fConfig);
     		} catch (FileNotFoundException e1) {
+    			ClassRanks.log("File not found!", Level.SEVERE);
     			e1.printStackTrace();
     		} catch (IOException e1) {
+    			ClassRanks.log("IO Exception!", Level.SEVERE);
     			e1.printStackTrace();
     		} catch (InvalidConfigurationException e1) {
+    			ClassRanks.log("Invalid Configuration!", Level.SEVERE);
     			e1.printStackTrace();
     		}
         	ClassRanks.log("CoolDown file loaded!", Level.INFO);
         } else {
         	HashMap<String, Integer> cdx = new HashMap<String, Integer>();
         	cdx.put("slipcor", 0);
-        	config.set("cooldown", cdx);
+        	config.set("cooldown", null);
         }
         
-        HashMap<String, Integer> cds = (HashMap<String, Integer>) config.get("cooldown");
-        
+        Map<String, Object> cds = (Map<String, Object>) config.getConfigurationSection("cooldown").getValues(true);
         int now = Math.round((System.currentTimeMillis() % (60*60*24*1000)) /1000);
 
         if (cds.containsKey(comP.getName())) {
         	// Subtract the seconds waited from the needed seconds
-        	int cd = CRClasses.coolDown - (now - cds.get(comP.getName()));
+        	int cd = CRClasses.coolDown - (now - (Integer) cds.get(comP.getName()));
         	if ((cd <= CRClasses.coolDown) && (cd > 0)) {
         		return cd; // we still have to wait, return how many seconds
         	}
@@ -141,9 +144,10 @@ public class CRPlayers {
     	
         config.set("cooldown", null);
         config.set("cooldown", cds);
-        try {
+		try {
 			config.save(fConfig);
 		} catch (IOException e) {
+			ClassRanks.log("IO Exception!", Level.SEVERE);
 			e.printStackTrace();
 		}
         

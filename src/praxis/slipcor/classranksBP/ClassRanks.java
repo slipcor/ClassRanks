@@ -25,6 +25,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import com.alta189.sqlLibrary.MySQL.mysqlCore;
 import com.alta189.sqlLibrary.SQLite.sqlCore;
 import de.bananaco.permissions.Permissions;
@@ -135,7 +136,6 @@ public class ClassRanks extends JavaPlugin {
 	/*
 	 * Function that stores the values out of the config.yml into the plugin
 	 */
-    @SuppressWarnings("unchecked")
 	public void loadConfig() {
     	if(!this.getDataFolder().exists()){
             this.getDataFolder().mkdir();
@@ -168,23 +168,34 @@ public class ClassRanks extends JavaPlugin {
                 log("Unable to create default config.yml:" + e, Level.INFO);
             }
         }
+        
         YamlConfiguration config = new YamlConfiguration();
         try {
 			config.load(fConfig);
 		} catch (FileNotFoundException e1) {
+			log("File not found!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
 		} catch (IOException e1) {
+			log("IO Exception!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
 		} catch (InvalidConfigurationException e1) {
+			log("Invalid Configuration!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
+		} catch (Exception e) {
+			log("Did you update to v0.1.5? - Backup and remove your config!", Level.SEVERE);
+			e.printStackTrace();
+			return;
 		}
         
         // set prices
-        Map<Integer,String> prices = (Map<Integer,String>) config.get("prices");
+        Map<String, Object> prices = (Map<String, Object>) config.getConfigurationSection("prices").getValues(true);
         CRClasses.cost = new double[prices.size()];
         int i = 0;
-        for (Integer Key : prices.keySet()) {
-        	String sVal = prices.get(Key);
+        for (String Key : prices.keySet()) {
+        	String sVal = (String) prices.get(Key);
         	try {
         		CRClasses.cost[i] = Double.parseDouble(sVal);
         	} catch (Exception e) {
@@ -201,6 +212,7 @@ public class ClassRanks extends JavaPlugin {
 		// set other variables
 		CRClasses.rankpublic = config.getBoolean("rankpublic", false);
 		CRClasses.defaultrankallworlds = config.getBoolean("defaultrankallworlds", false);
+		CRClasses.onlyoneclass = config.getBoolean("onlyoneclass", true);
 		
 		boolean signs = config.getBoolean("signcheck", false);
 		if (signs) {
@@ -211,39 +223,40 @@ public class ClassRanks extends JavaPlugin {
 		
 		CRClasses.coolDown = config.getInt("cooldown", 0);
 		
-		ItemStack[][] itemStacks;
-		Map<String, Object> items = (Map<String, Object>) config.get("items");
-		if (items == null) {
-			itemStacks = new ItemStack[3][1];
-		} else {
-			// for each items => ItemStack[][1,2,3]
-			int iI = 0;
-			itemStacks = new ItemStack[items.size()][];
-			for (String isKey : items.keySet()) {
-				String values = (String) items.get(isKey);
-				String[] vStr = values.split(" ");
-				itemStacks[iI] = new ItemStack[vStr.length];
-				for (int iJ = 0 ; iJ < vStr.length ; iJ++) {
-
-					String[] vValue = vStr[iJ].split(":");
-					
-					int vAmount = vValue.length > 1 ? Integer.parseInt(vValue[1]) : 1;
-					try {
-						itemStacks[iI][iJ] = new ItemStack(
-			                    Material.valueOf(vValue[0]),
-			                    vAmount
-			                );
-					} catch (Exception e) {
-						log("Unrecognized reagent: " + vValue[0], Level.WARNING);
-						continue;
+		ItemStack[][] itemStacks = null;
+		if (config.getConfigurationSection("items") != null) {
+			Map<String, Object> items = (Map<String, Object>) config.getConfigurationSection("items").getValues(true);
+			if (items == null) {
+				itemStacks = new ItemStack[3][1];
+			} else {
+				// for each items => ItemStack[][1,2,3]
+				int iI = 0;
+				itemStacks = new ItemStack[items.size()][];
+				for (String isKey : items.keySet()) {
+					String values = (String) items.get(isKey);
+					String[] vStr = values.split(" ");
+					itemStacks[iI] = new ItemStack[vStr.length];
+					for (int iJ = 0 ; iJ < vStr.length ; iJ++) {
+	
+						String[] vValue = vStr[iJ].split(":");
+						
+						int vAmount = vValue.length > 1 ? Integer.parseInt(vValue[1]) : 1;
+						try {
+							itemStacks[iI][iJ] = new ItemStack(
+				                    Material.valueOf(vValue[0]),
+				                    vAmount
+				                );
+						} catch (Exception e) {
+							log("Unrecognized reagent: " + vValue[0], Level.WARNING);
+							continue;
+						}
 					}
+					iI++;
 				}
-				iI++;
 			}
+
 		}
-		
 		CRClasses.rankItems = itemStacks;
-		
 		// get variables from settings handler
  		if (config.getBoolean("MySQL", false)) {
  			this.MySQL = config.getBoolean("MySQL", false);
@@ -393,14 +406,24 @@ public class ClassRanks extends JavaPlugin {
         try {
 			config.load(fConfig);
 		} catch (FileNotFoundException e1) {
+			log("File not found!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
 		} catch (IOException e1) {
+			log("IO Exception!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
 		} catch (InvalidConfigurationException e1) {
+			log("Invalid Configuration!", Level.SEVERE);
 			e1.printStackTrace();
+			return;
+		} catch (Exception e) {
+			log("Did you update to v0.1.5? - Backup and remove your config!", Level.SEVERE);
+			e.printStackTrace();
+			return;
 		}
-        
-        Map<String, Object> contents = (Map<String,Object>) config.get("classes");
+
+        Map<String, Object> contents = (Map<String, Object>) config.getConfigurationSection("classes").getValues(true);
         for (String cClass : contents.keySet()) {
         	log(cClass, Level.INFO);
         	boolean first = true;

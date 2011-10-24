@@ -53,9 +53,11 @@ public class CRClasses {
 	public static double[] cost = new double[3]; // Costs
 	public static boolean rankpublic; // do we spam changed to the public?
 	public static boolean defaultrankallworlds; // do ppl rank themselves in all worlds?
+	public static boolean onlyoneclass; // only maintain one class
 	public static ItemStack[][] rankItems;
 	public static int coolDown = 0; // CoolDown timer variable ( Seconds )
 	public static String[] signCheck = {null, null, null}; // SignCheck variable
+
 
 	/*
 	 * This function searches the group map specified in the config.
@@ -193,7 +195,7 @@ public class CRClasses {
 		            }
 				}
 				
-				items = rankItems[cRank+1];
+				items = rankItems!=null?rankItems[cRank+1]:null;
 			}
 			rankOffset = 1;
 		} else if (args[0].equalsIgnoreCase("rankdown")) {
@@ -218,7 +220,8 @@ public class CRClasses {
 		}
 		
 		changePlayer = CRPlayers.search(changePlayer);
-		classRemove(World, changePlayer, cPermName);
+		if (onlyoneclass || rankOffset < 0) // up and only OR down
+			classRemove(World, changePlayer, cPermName);
 		
 		// "MTrader:Trader III:&2:1:2:2"
 		String[] nStr = getEverythingbyIDs(cID,cRank+rankOffset).split(":");
@@ -247,7 +250,7 @@ public class CRClasses {
 	}	
 	
     public static boolean hasPerms(Player comP, String string, String world) {
-    	return ClassRanks.permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains("string");
+    	return ClassRanks.permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains(string);
 	}
 
     
@@ -390,38 +393,46 @@ public class CRClasses {
 			// get the class of the player we're talking about
 			args[1] = CRPlayers.search(args[1]);
 			String className = getClass(world, args[1]);
-
-			if (!className.equals("")) {
-				// player has a class
-				className = getEverythingbyClassName(className);
-
-				// "MTrader*Trader III:&2"
-    			String[] tStr = className.split(":");
-    			
-				String cDispName = tStr[1]; // Display rank name
-				String cColor = tStr[2];    // Rank color
-    			
-				if (args[0].equalsIgnoreCase("add")) {
-					// only one class per player :p
-					ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " already is in the class " + CRFormats.formatStringByColorCode(cDispName,cColor) + "!");
-				} else if (args[0].equalsIgnoreCase("remove")) {
-					classRemove(world, args[1], tStr[0]); // do it!
-					
-					if ((!pPlayer.getName().equalsIgnoreCase(args[1]))) {
-						ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
-
-						Player chP = plugin.getServer().getPlayer(args[1]);
-						try {
-							if (chP.isOnline()) {
-								chP.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+			if (className.equals("")) {
+				int i = 0; // combo breaker
+				while (!className.equals("")) {
+					// player has a class
+					className = getEverythingbyClassName(className);
+	
+					// "MTrader*Trader III:&2"
+	    			String[] tStr = className.split(":");
+	    			
+					String cDispName = tStr[1]; // Display rank name
+					String cColor = tStr[2];    // Rank color
+	    			
+					if (args[0].equalsIgnoreCase("add")) {
+						// only one class per player :p
+						ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " already is in the class " + CRFormats.formatStringByColorCode(cDispName,cColor) + "!");
+					} else if (args[0].equalsIgnoreCase("remove")) {
+						classRemove(world, args[1], tStr[0]); // do it!
+						
+						if ((!pPlayer.getName().equalsIgnoreCase(args[1]))) {
+							ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+	
+							Player chP = plugin.getServer().getPlayer(args[1]);
+							try {
+								if (chP.isOnline()) {
+									chP.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+								}
+							} catch (Exception e) {
+								// do nothing, the player is not online
 							}
-						} catch (Exception e) {
-							// do nothing, the player is not online
+						} else {
+							// self remove successful!
+							if (i == 0)
+								ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 						}
-					} else {
-						// self remove successful!
-						ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 					}
+					if (++i > 10) {
+						ClassRanks.log("Infinite loop! More than 10 ranks!?", Level.SEVERE);
+						break;
+					}
+					className = getClass(world, args[1]);
 				}
 				return true;
 			}
@@ -431,8 +442,7 @@ public class CRClasses {
 				if (pPlayer.getName().equalsIgnoreCase(args[1])) {
     				ClassRanks.pmsg(pPlayer,"You don't have a class!");
     				return true;
-					
-				}else {
+				} else {
     				ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1], colPlayer) + " does not have a class!");
     				return true;
 				}
@@ -551,7 +561,7 @@ public class CRClasses {
 				return true;
 			}
 			
-			if ((rankItems[0] != null) && (!CRFormats.formatItemStacks(rankItems[0]).equals(""))) {
+			if (rankItems != null && (rankItems[0] != null) && (!CRFormats.formatItemStacks(rankItems[0]).equals(""))) {
 				if (!CRPlayers.ifHasTakeItems(pPlayer, rankItems[0])) {
 					ClassRanks.pmsg(pPlayer, "You don't have the required items!");
 					ClassRanks.pmsg(pPlayer, "(" + CRFormats.formatItemStacks(rankItems[0]) + ")");

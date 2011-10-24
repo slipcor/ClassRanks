@@ -3,6 +3,7 @@
 #------------------#
 rankpublic: true
 defaultrankallworlds: false
+onlyoneclass: true
 signcheck: false
 signchoose: '[choose]'
 signrankup: '[rankup]'
@@ -28,9 +29,9 @@ MySQLdb:
 # Money Cost Settings #
 #---------------------#
 prices:
-    1: '10.00'
-    2: '50.00'
-    3: '100.00'
+    '10.00'
+    '50.00'
+    '100.00'
 
 #--------------------#
 # Item Cost Settings #
@@ -49,4 +50,4 @@ items:
 #------------------#
 # Config debugging #
 #------------------#
-cversion: '0143'
+cversion: '0150'
