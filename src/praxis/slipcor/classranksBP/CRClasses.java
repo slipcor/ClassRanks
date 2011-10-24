@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -248,21 +247,7 @@ public class CRClasses {
 	}	
 	
     public static boolean hasPerms(Player comP, String string, String world) {
-    	PermissionSet ps = ClassRanks.permissionHandler.getPermissionSet(world);
-		List<String> list = ps.getPlayerNodes(comP);
-		if (list.contains(string)) {
-			return true;
-		}
-		
-		Iterator<String> itr = list.iterator();		
-		while(itr.hasNext()) {
-		    String group = itr.next(); 
-		    List<String> list2 = ps.getGroupNodes(group);
-		    if (list2.contains(string)) {
-		    	return true;
-		    }
-		} 
-		return false;
+    	return ClassRanks.permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains("string");
 	}
 
     
@@ -532,7 +517,7 @@ public class CRClasses {
     			
     			classRemove(defaultrankallworlds?"all":pPlayer.getWorld().getName(), pPlayer.getName(), tStr[0]);
 
-				ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(pPlayer.getWorld().getName(),colWorld) + "!");
+    			ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(defaultrankallworlds?"all":pPlayer.getWorld().getName(),colWorld) + "!");
 				return true;
 			} else if (args[0].equalsIgnoreCase("add")) {
 				ClassRanks.pmsg(pPlayer,"Not enough arguments!");

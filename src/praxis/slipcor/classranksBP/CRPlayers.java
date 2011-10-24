@@ -1,12 +1,14 @@
 package praxis.slipcor.classranksBP;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
-
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.config.Configuration;
 
 import praxis.slipcor.classranksBP.CRClasses;
 import praxis.slipcor.classranksBP.ClassRanks;
@@ -14,10 +16,11 @@ import praxis.slipcor.classranksBP.ClassRanks;
 /*
  * player class
  * 
- * v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
+ * v0.1.4.5 - update to CB #1337
  * 
  * History:
  * 
+ *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
  *      v0.1.3.3 - Possibility to pay for upranking
  * 		v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
  * 
@@ -102,18 +105,26 @@ public class CRPlayers {
 		}
 		
 		File fConfig = new File(CRClasses.plugin.getDataFolder(),"cooldowns.yml");
-        Configuration config = new Configuration(fConfig);
+		YamlConfiguration config = new YamlConfiguration();
         
         if(fConfig.isFile()){
-        	config.load();
+        	try {
+    			config.load(fConfig);
+    		} catch (FileNotFoundException e1) {
+    			e1.printStackTrace();
+    		} catch (IOException e1) {
+    			e1.printStackTrace();
+    		} catch (InvalidConfigurationException e1) {
+    			e1.printStackTrace();
+    		}
         	ClassRanks.log("CoolDown file loaded!", Level.INFO);
         } else {
         	HashMap<String, Integer> cdx = new HashMap<String, Integer>();
         	cdx.put("slipcor", 0);
-        	config.setProperty("cooldown", cdx);
+        	config.set("cooldown", cdx);
         }
         
-        HashMap<String, Integer> cds = (HashMap<String, Integer>) config.getProperty("cooldown");
+        HashMap<String, Integer> cds = (HashMap<String, Integer>) config.get("cooldown");
         
         int now = Math.round((System.currentTimeMillis() % (60*60*24*1000)) /1000);
 
@@ -128,9 +139,13 @@ public class CRPlayers {
 
     	cds.put(comP.getName(), now);
     	
-        config.removeProperty("cooldown");
-        config.setProperty("cooldown", cds);
-        config.save();
+        config.set("cooldown", null);
+        config.set("cooldown", cds);
+        try {
+			config.save(fConfig);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
         
 		return 0;
 	}

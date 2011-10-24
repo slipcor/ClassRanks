@@ -1,7 +1,9 @@
 package praxis.slipcor.classranksBP;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.Map;
@@ -14,6 +16,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -21,11 +25,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.config.Configuration;
-
 import com.alta189.sqlLibrary.MySQL.mysqlCore;
 import com.alta189.sqlLibrary.SQLite.sqlCore;
-
 import de.bananaco.permissions.Permissions;
 import de.bananaco.permissions.worlds.WorldPermissionsManager;
 import praxis.classranks.register.payment.Method;
@@ -35,10 +36,11 @@ import praxis.slipcor.classranksBP.CRFormats;
 /*
  * main class
  * 
- * v0.1.4.4 - minor fixes
+ * v0.1.4.5 - update to CB #1337
  * 
  * History:
  * 
+ *      v0.1.4.4 - minor fixes
  *      v0.1.4.3 - Multiworld "all" support
  *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
  * 		v0.1.4.0 - Register API
@@ -166,12 +168,19 @@ public class ClassRanks extends JavaPlugin {
                 log("Unable to create default config.yml:" + e, Level.INFO);
             }
         }
-
-        Configuration config = new Configuration(fConfig);
-        config.load();
+        YamlConfiguration config = new YamlConfiguration();
+        try {
+			config.load(fConfig);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (InvalidConfigurationException e1) {
+			e1.printStackTrace();
+		}
         
         // set prices
-        Map<Integer,String> prices = (Map<Integer,String>) config.getProperty("prices");
+        Map<Integer,String> prices = (Map<Integer,String>) config.get("prices");
         CRClasses.cost = new double[prices.size()];
         int i = 0;
         for (Integer Key : prices.keySet()) {
@@ -203,7 +212,7 @@ public class ClassRanks extends JavaPlugin {
 		CRClasses.coolDown = config.getInt("cooldown", 0);
 		
 		ItemStack[][] itemStacks;
-		Map<String, Object> items = (Map<String, Object>) config.getProperty("items");
+		Map<String, Object> items = (Map<String, Object>) config.get("items");
 		if (items == null) {
 			itemStacks = new ItemStack[3][1];
 		} else {
@@ -380,10 +389,18 @@ public class ClassRanks extends JavaPlugin {
             }
         }
 
-        Configuration config = new Configuration(fConfig);
-        config.load();
+        YamlConfiguration config = new YamlConfiguration();
+        try {
+			config.load(fConfig);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (InvalidConfigurationException e1) {
+			e1.printStackTrace();
+		}
         
-        Map<String, Object> contents = (Map<String,Object>) config.getProperty("classes");
+        Map<String, Object> contents = (Map<String,Object>) config.get("classes");
         for (String cClass : contents.keySet()) {
         	log(cClass, Level.INFO);
         	boolean first = true;
