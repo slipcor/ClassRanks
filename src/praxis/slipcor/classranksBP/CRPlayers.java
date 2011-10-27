@@ -16,10 +16,11 @@ import praxis.slipcor.classranksBP.ClassRanks;
 /*
  * player class
  * 
- * v0.1.4.5 - update to CB #1337
+ * v0.1.5.1 - cleanup
  * 
  * History:
  * 
+ *      v0.1.5.0 - more fixes, update to CB #1337
  *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
  *      v0.1.3.3 - Possibility to pay for upranking
  * 		v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
@@ -38,7 +39,6 @@ public class CRPlayers {
 				// gotcha!
 				return p[i].getName();				
 			}
-			
 		}
 		// not found online, hope that it was right anyways
 		return player;
@@ -104,23 +104,22 @@ public class CRPlayers {
 		}
 		
 		File fConfig = new File(CRClasses.plugin.getDataFolder(),"cooldowns.yml");
-
-        YamlConfiguration config = new YamlConfiguration();
+		YamlConfiguration config = new YamlConfiguration();
         
         
         if(fConfig.isFile()){
         	try {
-    			config.load(fConfig);
-    		} catch (FileNotFoundException e1) {
-    			ClassRanks.log("File not found!", Level.SEVERE);
-    			e1.printStackTrace();
-    		} catch (IOException e1) {
-    			ClassRanks.log("IO Exception!", Level.SEVERE);
-    			e1.printStackTrace();
-    		} catch (InvalidConfigurationException e1) {
-    			ClassRanks.log("Invalid Configuration!", Level.SEVERE);
-    			e1.printStackTrace();
-    		}
+				config.load(fConfig);
+			} catch (FileNotFoundException e) {
+				ClassRanks.log("File not found!", Level.SEVERE);
+				e.printStackTrace();
+			} catch (IOException e) {
+				ClassRanks.log("IO Exception!", Level.SEVERE);
+				e.printStackTrace();
+			} catch (InvalidConfigurationException e) {
+				ClassRanks.log("Invalid Configuration!", Level.SEVERE);
+				e.printStackTrace();
+			}
         	ClassRanks.log("CoolDown file loaded!", Level.INFO);
         } else {
         	HashMap<String, Integer> cdx = new HashMap<String, Integer>();

@@ -3,10 +3,7 @@ package praxis.slipcor.classranksBP;
 import java.net.MalformedURLException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 
 import org.bukkit.ChatColor;
@@ -15,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import de.bananaco.permissions.interfaces.PermissionSet;
-
 import praxis.classranks.register.payment.Method.MethodAccount;
 import praxis.slipcor.classranksBP.ClassRanks;
 import praxis.slipcor.classranksBP.CRPlayers;
@@ -23,10 +19,13 @@ import praxis.slipcor.classranksBP.CRPlayers;
 /*
  * classes access class
  * 
- * v0.1.4.4 - minor fixes
+ * v0.1.5.2 - dbload correction, onlyoneclass activation
  * 
  * History:
  * 
+ *      v0.1.5.1 - cleanup
+ *      v0.1.5.0 - more fixes, update to CB #1337
+ *      v0.1.4.4 - minor fixes
  *      v0.1.4.3 - Multiworld "all" support
  *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
  * 		v0.1.4.1 - method NPE Fix
@@ -47,7 +46,6 @@ import praxis.slipcor.classranksBP.CRPlayers;
 public class CRClasses {
 	public static ClassRanks plugin = null;
 	
-	public static Collection<Map<String, Object>> groups = new ArrayList<Map<String,Object>>(); // Map of groups players can choose
 	public static ChatColor colPlayer = ChatColor.YELLOW; // Color: Playername
 	public static ChatColor colWorld = ChatColor.GOLD;   // Color: Worldname
 	public static double[] cost = new double[3]; // Costs
@@ -57,64 +55,68 @@ public class CRClasses {
 	public static ItemStack[][] rankItems;
 	public static int coolDown = 0; // CoolDown timer variable ( Seconds )
 	public static String[] signCheck = {null, null, null}; // SignCheck variable
-
-
+	
 	/*
-	 * This function searches the group map specified in the config.
-	 * It checks the given string (case insensitive) and returns the
-	 * exact Class:Options pair for further investigation
+	 * This function searches the ranks database for exact matches of class ID and rank ID.
+	 * Returns the detailed rank string with all possible information
 	 */
 	public static String getEverythingbyIDs(int cID, int rID) {
 		return mysqlReturnEverything("SELECT * FROM classranks_ranks WHERE cid = '" + String.valueOf(cID) + "' AND oid = '" + String.valueOf(rID) + "';");
 	}
 	
-	
 	/*
-	 * This function searches the group map specified in the config.
-	 * It checks the given string (case insensitive) and returns the
-	 * exact Class:Options pair for further investigation
+	 * This function searches the ranks database for exact matches of permission name.
+	 * Returns the detailed rank string with all possible information
 	 */
-	public static String getEverythingbyClassName(String className) {
-		return mysqlReturnEverything("SELECT * FROM classranks_ranks WHERE permname = '" + className + "';");
+	public static String getEverythingbyPermName(String permName) {
+		return mysqlReturnEverything("SELECT * FROM classranks_ranks WHERE permname = '" + permName + "';");
 	}
 	
 	/*
-	 * This function searches the permission groups.
-	 * It checks player's permission in world and returns the
-	 * exact Key:Class pair for further permission handling
+	 * This function searches the ranks database for exact matches of world and player name.
+	 * Returns the detailed rank string with all possible information
 	 */
 	public static String getEverythingbyPlayer(String world, String player) {
-		return mysqlReturnGroupByPlayer("SELECT * FROM classranks_ranks WHERE 1;",world,player);
+		return mysqlReturnEverythingByPlayer("SELECT * FROM classranks_ranks WHERE 1 ORDER BY `id` DESC;",world,player);
 	}
 
 	/*
-	 * This function uses getClassKeySetbyPlayer and returns the
-	 * exact group for further permission handling
+	 * This function reads the CID of the given class name
+	 * Returns the permname with the highest ID
 	 */
-	public static String getClass(String world, String player) {
+	public static String getFirstPermNamebyClass(String cString) {
+		int cID = mysqlReturnCIDByClassName(cString);
+		return mysqlReturnSinglePermName("SELECT * FROM `classranks_ranks` WHERE `cid` = '" + cID + "' ORDER BY `id` ASC");
+	}
+
+	/*
+	 * This function searches a given world and player
+	 * Returns the permname
+	 */
+	public static String getPermName(String world, String player) {
 		// get the exact string alike "MTrader:Trader III:&2:1:2:2"
-		String classExists = getEverythingbyPlayer(world, player);
-		if (classExists.equals("")) {
+		String sRankInfo = getEverythingbyPlayer(world, player);
+		if (sRankInfo.equals("")) {
 			return ""; // No Rank, result empty
 		}
-		String[] spl = classExists.split(":");
-		return spl[0]; // return the Group
+		String[] spl = sRankInfo.split(":");
+		return spl[0]; // return the permname
 	}
 	
 	/*
 	 * This function provides the main ranking process - including error messages
 	 * when stuff is not right.
 	 *   - check if permissions are there
-	 *   - get old class
-	 *   - calculate new class
-	 *   - delete from old group
-	 *   - add to new group
+	 *   - get old rank
+	 *   - calculate new rank
+	 *   - eventually delete from old rank
+	 *   - add to new rank
 	 */
 	public static boolean rank(String[] args, Player comP) {
 		int cDown = CRPlayers.coolDownCheck(comP);
 		if (cDown > 0) {
 			ClassRanks.pmsg(comP, "You have to wait " + ChatColor.RED + String.valueOf(cDown) + ChatColor.WHITE + " seconds!");
-			return true;
+			return true; // cooldown timer still counting => OUT!
 		}
 		
 		if ((!hasPerms(comP, "classranks.rankdown", comP.getWorld().getName())) && args[0].equalsIgnoreCase("rankdown")) {
@@ -135,11 +137,11 @@ public class CRClasses {
 			}
 		}
 
-		// do we have a class?
-		String classExists = getEverythingbyPlayer(World, changePlayer);
+		// do we have a rank?
+		String hasRank = getEverythingbyPlayer(World, changePlayer);
 		
-		if (classExists.equals("")) {
-			// No Class
+		if (hasRank.equals("")) {
+			// No Rank
 			if (self) {
 				ClassRanks.pmsg(comP, "You don't have a class!");
 				return true;
@@ -148,8 +150,8 @@ public class CRClasses {
 				return true;
 			}
 		}
-		// extract old class from alike "MTrader:Trader III:&2:1:2:2"
-		String[] tStr = classExists.split(":");
+		// extract old rank e.g. "MTrader:Trader III:&2:1:2:2"
+		String[] tStr = hasRank.split(":");
 		
 		String cPermName = tStr[0]; // Permissions rank name
 		String cDispName = tStr[1]; // Display rank name
@@ -163,7 +165,7 @@ public class CRClasses {
 		// placeholder: items
 		ItemStack[] items = null;
 		
-		// placeholders for new class
+		// placeholders for new rank
 		int rankOffset = 0;
 		
 		if (args[0].equalsIgnoreCase("rankup")) {
@@ -188,8 +190,8 @@ public class CRClasses {
 						ClassRanks.log("Account not found: "+comP.getName(), Level.SEVERE);
 						return true;
 					}
-					if(!ma.hasEnough(rank_cost)){
-						// no money, no rank!
+					if (!ma.hasEnough(rank_cost)){
+						// no money, no ranking!
 		                ClassRanks.pmsg(comP, "You don't have enough money to rank up!");
 		                return true;
 		            }
@@ -230,7 +232,7 @@ public class CRClasses {
 		cDispName = nStr[1];
 		cColor = nStr[2];
 
-		classAdd(World, changePlayer, cPermName);
+		rankAdd(World, changePlayer, cPermName);
 		
 		if ((ClassRanks.method != null) && (rank_cost > 0)) {
 			// take the money, inform the player
@@ -259,6 +261,7 @@ public class CRClasses {
      */
 	public static void classAdd(String world, String player, String cString) {
 		player = CRPlayers.search(player); // auto-complete playername
+		cString = getFirstPermNamebyClass(cString);
 		if (ClassRanks.permissionHandler != null) {
 			String[] worlds = {world};
 			if (world.equalsIgnoreCase("all")) {
@@ -278,7 +281,35 @@ public class CRClasses {
 			}
 		}
 	}
-	
+
+    /*
+     * Add a user to a given rank in the given world
+     */
+	public static void rankAdd(String world, String player, String rank) {
+		System.out.print("r:" + rank);
+		System.out.print(player);
+		System.out.print(world);
+		player = CRPlayers.search(player); // auto-complete playername
+		if (ClassRanks.permissionHandler != null) {
+			String[] worlds = {world};
+			if (world.equalsIgnoreCase("all")) {
+				List<World> lWorlds = plugin.getServer().getWorlds();
+				
+				worlds = new String[lWorlds.size()];
+				for(int i=0;i<lWorlds.size();i++) {
+					worlds[i] = lWorlds.get(i).getName();
+				}
+			}
+			for(int i=0;i<worlds.length;i++) {
+				try {
+					ClassRanks.permissionHandler.getPermissionSet(worlds[i]).addGroup(player, rank);
+				} catch (Exception e) {
+					ClassRanks.log("PermName " + rank + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
+				}
+			}
+		}
+	}
+
 	/*
 	 * Remove a user from the class he has in the given world
 	 */
@@ -311,7 +342,6 @@ public class CRClasses {
 	public static boolean parseCommand(Player pPlayer, String[] args) {
 
 		if (args.length > 1) {
-			
 			if (args[0].equalsIgnoreCase("get")) {
 				String world = defaultrankallworlds?"all":pPlayer.getWorld().getName();
 				if (args.length>2) {
@@ -320,14 +350,14 @@ public class CRClasses {
 				args[1] = CRPlayers.search(args[1]);
 				String className = getEverythingbyPlayer(world, args[1]);
 				if (className.equals("")) {
-					ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " has no group in " + CRFormats.applyColor(world,colWorld) + "!");
+					ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " has no class in " + CRFormats.applyColor(world,colWorld) + "!");
 				} else {
 					// "MTrader:Trader III:&2:1:2"
 					String[] tStr = className.split(":");
 					String cDispName = tStr[1]; // Display rank name
 					String cColor = tStr[2];    // Rank color
 					
-					ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " is in group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+					ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " is " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 				}
 				return true;
 			}
@@ -392,32 +422,33 @@ public class CRClasses {
 			
 			// get the class of the player we're talking about
 			args[1] = CRPlayers.search(args[1]);
-			String className = getClass(world, args[1]);
-			if (className.equals("")) {
+			String sRankInfo = getPermName(world, args[1]);
+			
+			if (!sRankInfo.equals("")) {
 				int i = 0; // combo breaker
-				while (!className.equals("")) {
-					// player has a class
-					className = getEverythingbyClassName(className);
+				while (!sRankInfo.equals("")) {
+					// player has a rank
+					sRankInfo = getEverythingbyPermName(sRankInfo);
 	
 					// "MTrader*Trader III:&2"
-	    			String[] tStr = className.split(":");
+	    			String[] tStr = sRankInfo.split(":");
 	    			
 					String cDispName = tStr[1]; // Display rank name
 					String cColor = tStr[2];    // Rank color
 	    			
 					if (args[0].equalsIgnoreCase("add")) {
 						// only one class per player :p
-						ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " already is in the class " + CRFormats.formatStringByColorCode(cDispName,cColor) + "!");
+						ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " already already has the rank " + CRFormats.formatStringByColorCode(cDispName,cColor) + "!");
 					} else if (args[0].equalsIgnoreCase("remove")) {
 						classRemove(world, args[1], tStr[0]); // do it!
 						
 						if ((!pPlayer.getName().equalsIgnoreCase(args[1]))) {
-							ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+							ClassRanks.pmsg(pPlayer,"Player " + CRFormats.applyColor(args[1],colPlayer) + " removed from rank " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 	
 							Player chP = plugin.getServer().getPlayer(args[1]);
 							try {
 								if (chP.isOnline()) {
-									chP.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+									chP.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] You were removed from rank " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 								}
 							} catch (Exception e) {
 								// do nothing, the player is not online
@@ -425,14 +456,14 @@ public class CRClasses {
 						} else {
 							// self remove successful!
 							if (i == 0)
-								ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
+								ClassRanks.pmsg(pPlayer,"You were removed from rank " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(world,colWorld) + "!");
 						}
 					}
 					if (++i > 10) {
 						ClassRanks.log("Infinite loop! More than 10 ranks!?", Level.SEVERE);
 						break;
 					}
-					className = getClass(world, args[1]);
+					sRankInfo = getPermName(world, args[1]);
 				}
 				return true;
 			}
@@ -449,15 +480,15 @@ public class CRClasses {
 			}
 			// ADD
 
-			className = getEverythingbyClassName(args[2]);
+			sRankInfo = getEverythingbyPermName(args[2]);
 			
-			if (className.equals("")) {
+			if (sRankInfo.equals("")) {
 				ClassRanks.pmsg(pPlayer,"The class you have entered does not exist!");
 				return true;
 			}
 			
 			// "MTrader*Trader III:&2"
-			String[] tStr = className.split(":");
+			String[] tStr = sRankInfo.split(":");
 			String cPermName = tStr[0]; // Display rank name
 			String cDispName = tStr[1]; // Display rank name
 			String cColor = tStr[2];    // Rank color
@@ -510,24 +541,24 @@ public class CRClasses {
     				ClassRanks.pmsg(pPlayer,"You don't have permission to add/remove your rank!");
     				return true;
     			}
-    			String className = getClass(pPlayer.getWorld().getName(), pPlayer.getName());
+    			String sRankInfo = getPermName(pPlayer.getWorld().getName(), pPlayer.getName());
 				
-    			className = getEverythingbyClassName(className);
+    			sRankInfo = getEverythingbyPermName(sRankInfo);
 				
-				if (className.equals("")) {
+				if (sRankInfo.equals("")) {
 					ClassRanks.pmsg(pPlayer,"You don't have a class!");
 					return true;
 				}
 
 				// "MTrader*Trader III:&2"
-    			String[] tStr = className.split(":");
+    			String[] tStr = sRankInfo.split(":");
     			
     			String cDispName = tStr[1]; // Display rank name
     			String cColor = tStr[2];    // Rank color
     			
     			classRemove(defaultrankallworlds?"all":pPlayer.getWorld().getName(), pPlayer.getName(), tStr[0]);
 
-    			ClassRanks.pmsg(pPlayer,"You were removed from Group " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(defaultrankallworlds?"all":pPlayer.getWorld().getName(),colWorld) + "!");
+    			ClassRanks.pmsg(pPlayer,"You were removed from rank " + CRFormats.formatStringByColorCode(cDispName,cColor) + " in " + CRFormats.applyColor(defaultrankallworlds?"all":pPlayer.getWorld().getName(),colWorld) + "!");
 				return true;
 			} else if (args[0].equalsIgnoreCase("add")) {
 				ClassRanks.pmsg(pPlayer,"Not enough arguments!");
@@ -542,21 +573,21 @@ public class CRClasses {
 				MethodAccount ma = ClassRanks.method.getAccount(pPlayer.getName());
             	if (!ma.hasEnough(cost[0])) {
             
-	                ClassRanks.pmsg(pPlayer,"You don't have enough money to choose your class!");
+	                ClassRanks.pmsg(pPlayer,"You don't have enough money to choose your class! (" + ClassRanks.method.format(cost[0]) + ")");
 	                return true;
             	}
             }
 
-			String className = getClass(pPlayer.getWorld().getName(), pPlayer.getName());
+			String sRankInfo = getPermName(pPlayer.getWorld().getName(), pPlayer.getName());
 			
-			if (!className.equals("")) {
-				ClassRanks.pmsg(pPlayer,"You already are in the Class " + className + "!");
+			if (!sRankInfo.equals("")) {
+				ClassRanks.pmsg(pPlayer,"You already have the rank " + sRankInfo + "!");
 				return true;
 			}
 		
-			className = getEverythingbyClassName(args[0]);
+			sRankInfo = getEverythingbyPermName(args[0]);
 			
-			if (className.equals("")) {
+			if (sRankInfo.equals("")) {
 				ClassRanks.pmsg(pPlayer,"The class you have entered does not exist!");
 				return true;
 			}
@@ -570,25 +601,19 @@ public class CRClasses {
 			}
 			
 			// "MTrader*Trader III:&2"
-			String[] tStr = className.split(":");
+			String[] tStr = sRankInfo.split(":");
 
 			String cPermName = tStr[0]; // Display rank name
 			String cDispName = tStr[1]; // Display rank name
 			String cColor = tStr[2];    // Rank color
-			int cRank = Integer.parseInt(tStr[4]); // Classes tree rank
-
-			if (cRank > 0) {
-				ClassRanks.pmsg(pPlayer,"The class you entered is no starting class!");
-				return true;
-			}
 			
 			// success!
 
 			classAdd(defaultrankallworlds?"all":pPlayer.getWorld().getName(), pPlayer.getName(), cPermName);
 			if (rankpublic) {
-				plugin.getServer().broadcastMessage("Player " + CRFormats.applyColor(pPlayer.getName(),colPlayer) +" has chosen the class " + CRFormats.formatStringByColorCode(cDispName,cColor));
+				plugin.getServer().broadcastMessage("Player " + CRFormats.applyColor(pPlayer.getName(),colPlayer) +" has chosen a class, now has the rank " + CRFormats.formatStringByColorCode(cDispName,cColor));
 			} else {
-				ClassRanks.pmsg(pPlayer,"You have chosen your class! You now are a " + CRFormats.formatStringByColorCode(cDispName,cColor));
+				ClassRanks.pmsg(pPlayer,"You have chosen your class! You now have the rank " + CRFormats.formatStringByColorCode(cDispName,cColor));
 			}	
 			
 			if ((ClassRanks.method != null) && (cost[0] > 0)) {
@@ -744,6 +769,33 @@ public class CRClasses {
 		return resultString;
 	}
 
+	public static String mysqlReturnSinglePermName(String query) {
+		String resultString = "";
+		ResultSet result = null;
+		if (plugin.MySQL) {
+			try {
+				result = plugin.manageMySQL.sqlQuery(query);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		} else {
+			result = plugin.manageSQLite.sqlQuery(query);
+		}
+		try {
+			// "MTrader:Trader III:&2:1:2:2"
+			if (result != null && result.next()) {
+				return result.getString("permname");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return resultString;
+	}
+	
 	public static int mysqlReturnMaxRank(String query) {
 		ResultSet result = null;
 		if (plugin.MySQL) {
@@ -773,7 +825,7 @@ public class CRClasses {
 		return count;
 	}
 	
-	public static String mysqlReturnGroupByPlayer(String query, String world, String player) {
+	public static String mysqlReturnEverythingByPlayer(String query, String world, String player) {
 		ResultSet result = null;
 		if (plugin.MySQL) {
 			try {
@@ -822,7 +874,7 @@ public class CRClasses {
 		return "";
 	}
 
-	public static int mysqlReturnLastClassID(String query) {
+	public static int mysqlReturnHighestID(String query) {
 		ResultSet result = null;
 		if (plugin.MySQL) {
 			try {
@@ -925,7 +977,7 @@ public class CRClasses {
 		if (plugin.MySQL) {
 			mysqlQuery("INSERT INTO classranks_classes (classname) VALUES ('" + cClassName + "');");
 		} else {
-			int newID = mysqlReturnLastClassID("SELECT * FROM classranks_classes WHERE 1;");
+			int newID = mysqlReturnHighestID("SELECT * FROM classranks_classes WHERE 1;");
 			mysqlQuery("INSERT INTO classranks_classes (id, classname) VALUES (" + String.valueOf(++newID) + ", '" + cClassName + "');");
 		}
 		ClassRanks.pmsg(pPlayer,"Class " + cClassName + " added");

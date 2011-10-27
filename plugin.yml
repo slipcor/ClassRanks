@@ -1,6 +1,6 @@
 name: ClassRanks
 main: praxis.slipcor.classranksBP.ClassRanks
-version: 0.1.5.0
+version: 0.1.5.2
 author: slipcor
 commands:
     class:
@@ -50,7 +50,7 @@ permissions:
         description: Allows you to rank yourself
         default: true
     classranks.self.addremove:
-        description: Allows you to add/remove your group
+        description: Allows you to add/remove your class
         default: true
     classranks.admin.rank:
         description: Allows you to rank other people
@@ -60,4 +60,4 @@ permissions:
         default: op
     classranks.admin.admin:
         description: Allows you to administrate the classes (db)
-        default: true
+        default: op

@@ -37,10 +37,12 @@ import praxis.slipcor.classranksBP.CRFormats;
 /*
  * main class
  * 
- * v0.1.4.5 - update to CB #1337
+ * v0.1.5.2 - dbload correction, onlyoneclass activation
  * 
  * History:
  * 
+ *      v0.1.5.1 - cleanup
+ *      v0.1.5.0 - more fixes, update to CB #1337
  *      v0.1.4.4 - minor fixes
  *      v0.1.4.3 - Multiworld "all" support
  *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
@@ -58,12 +60,12 @@ import praxis.slipcor.classranksBP.CRFormats;
  * 		v0.1.2.6 - corrected permission nodes
  * 		v0.1.2.3 - world and player color customizable
  * 		v0.1.2.0 - renaming for release
- * 
- * 2do:
  * 		
+ * 2do:
+ * 
  * @author slipcor
  */
-
+//TODO: ^^^^^^^^
 public class ClassRanks extends JavaPlugin {
     private final CRPlayerListener playerListener = new CRPlayerListener();
     public static CRServerListener serverListener = new CRServerListener();
@@ -172,17 +174,17 @@ public class ClassRanks extends JavaPlugin {
         YamlConfiguration config = new YamlConfiguration();
         try {
 			config.load(fConfig);
-		} catch (FileNotFoundException e1) {
+		} catch (FileNotFoundException e) {
 			log("File not found!", Level.SEVERE);
-			e1.printStackTrace();
+			e.printStackTrace();
 			return;
-		} catch (IOException e1) {
+		} catch (IOException e) {
 			log("IO Exception!", Level.SEVERE);
-			e1.printStackTrace();
+			e.printStackTrace();
 			return;
-		} catch (InvalidConfigurationException e1) {
+		} catch (InvalidConfigurationException e) {
 			log("Invalid Configuration!", Level.SEVERE);
-			e1.printStackTrace();
+			e.printStackTrace();
 			return;
 		} catch (Exception e) {
 			log("Did you update to v0.1.5? - Backup and remove your config!", Level.SEVERE);
@@ -190,19 +192,21 @@ public class ClassRanks extends JavaPlugin {
 			return;
 		}
         
-        // set prices
-        Map<String, Object> prices = (Map<String, Object>) config.getConfigurationSection("prices").getValues(true);
-        CRClasses.cost = new double[prices.size()];
-        int i = 0;
-        for (String Key : prices.keySet()) {
-        	String sVal = (String) prices.get(Key);
-        	try {
-        		CRClasses.cost[i] = Double.parseDouble(sVal);
-        	} catch (Exception e) {
-        		CRClasses.cost[i] = 0;
-        		log("Unrecognized cost key '" + String.valueOf(Key) + "': "+sVal, Level.INFO);
-        	}
-        	i++;
+        if (config.getConfigurationSection("prices") != null) {
+	        // set prices
+	        Map<String, Object> prices = (Map<String, Object>) config.getConfigurationSection("prices").getValues(true);
+	        CRClasses.cost = new double[prices.size()];
+	        int i = 0;
+	        for (String Key : prices.keySet()) {
+	        	String sVal = (String) prices.get(Key);
+	        	try {
+	        		CRClasses.cost[i] = Double.parseDouble(sVal);
+	        	} catch (Exception e) {
+	        		CRClasses.cost[i] = 0;
+	        		log("Unrecognized cost key '" + String.valueOf(Key) + "': "+sVal, Level.INFO);
+	        	}
+	        	i++;
+	        }
         }
         
 		// set subcolors
@@ -254,7 +258,6 @@ public class ClassRanks extends JavaPlugin {
 					iI++;
 				}
 			}
-
 		}
 		CRClasses.rankItems = itemStacks;
 		// get variables from settings handler
@@ -355,7 +358,7 @@ public class ClassRanks extends JavaPlugin {
     	
         ClassRanks.permissionHandler = Permissions.getWorldPermissionsManager();
         if(ClassRanks.permissionHandler == null){
-        	log("bPermissions not found, deactivating.", Level.SEVERE);
+        	log("bPermissions not found, defaulting to OP.", Level.WARNING);
             return false;            
         }
         log("<3 bPermissions", Level.INFO);
@@ -423,6 +426,9 @@ public class ClassRanks extends JavaPlugin {
 			return;
 		}
 
+        CRClasses.mysqlQuery("DELETE FROM classranks_classes WHERE 1;");
+        CRClasses.mysqlQuery("DELETE FROM classranks_ranks WHERE 1;");
+		
         Map<String, Object> contents = (Map<String, Object>) config.getConfigurationSection("classes").getValues(true);
         for (String cClass : contents.keySet()) {
         	log(cClass, Level.INFO);
