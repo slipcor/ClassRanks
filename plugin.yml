@@ -1,14 +1,14 @@
 name: ClassRanks
 main: praxis.slipcor.classranksBP.ClassRanks
-version: 0.1.5.2
+version: 0.1.6.0
 author: slipcor
 commands:
     class:
         description: Lets users choose a class / change classes
         usage: |
            /class [classname] | Choose the class [classname]
-           /class [add] {username} {classname} {world} | Add user to a group
-           /class [remove] {username} {world} | Remove user from a group
+           /class [add] {username} {classname} {world} | Add user to a class
+           /class [remove] {username} {world} | Remove user from a class
            /class [rankup/rankdown] [username] {world} | Rank user up/down 
            /class [rankup/rankdown] | Rank yourself up/down
            /class get [username] {world} | Get the active rank of a user

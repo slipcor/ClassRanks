@@ -13,24 +13,27 @@ import praxis.slipcor.classranksBP.ClassRanks;
 /*
  * server listener class
  * 
- * v0.1.4.3 - getServer NPE Fix
+ * v0.1.6 - cleanup
  * 
  * History:
  * 
- * 		v0.1.4.0 - Register API
- *      v0.1.3.4 - Fix: cost parsing
- *               - Fix: class change announcement
- *               - Cleanup: static plugin access
- *               - Cleanup: ordering
- * 		v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
- * 		v0.1.2.0 - renaming for release
+ *     v0.1.4.3 - getServer NPE Fix
+ * 	   v0.1.4.0 - Register API
+ *     v0.1.3.4 - Fix: cost parsing
+ *              - Fix: class change announcement
+ *              - Cleanup: static plugin access
+ *              - Cleanup: ordering
+ * 	   v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
+ * 	   v0.1.2.0 - renaming for release
  * 
  * @author slipcor
  */
 public class CRServerListener extends ServerListener {
 	private Methods methods = null;
+	private final ClassRanks c;
 
-    public CRServerListener() {
+    public CRServerListener(ClassRanks plugin) {
+    	c = plugin;
     	this.methods = new Methods();
     }
 
@@ -42,8 +45,8 @@ public class CRServerListener extends ServerListener {
             Boolean check = this.methods.checkDisabled(event.getPlugin());
 
             if(check) {
-                ClassRanks.method = null;
-                ClassRanks.log("</3 eConomy",Level.INFO);
+                c.method = null;
+                c.log("</3 eConomy",Level.INFO);
             }
         }
     }
@@ -54,10 +57,10 @@ public class CRServerListener extends ServerListener {
         // Check to see if we need a payment method
         if (!this.methods.hasMethod()) {
             if(this.methods.setMethod(Bukkit.getServer().getPluginManager())) {
-                ClassRanks.method = this.methods.getMethod();
-                ClassRanks.log("<3 " + ClassRanks.method.getName() + " version: " + ClassRanks.method.getVersion(),Level.INFO);
+                c.method = this.methods.getMethod();
+                c.log("<3 " + c.method.getName() + " version: " + c.method.getVersion(),Level.INFO);
             } else {
-		       	ClassRanks.log("</3 eConomy",Level.INFO);
+		       	c.log("</3 eConomy",Level.INFO);
             }
         }
     }

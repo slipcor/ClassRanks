@@ -77,7 +77,7 @@ public class DatabaseHandler {
 		    
 		    return result;
 		} catch (SQLException ex) {
-			core.writeError("Error at SQL Query: " + ex.getMessage(), false);
+			core.writeError("Error at SQL Query \"" + query + "\": " + ex.getMessage(), false);
 		}
 		return null;
 	}
@@ -92,7 +92,7 @@ public class DatabaseHandler {
 		    
 		} catch (SQLException ex) {
 			
-				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL INSERT Query: " + ex, false);
+				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL INSERT Query \"" + query + "\": " + ex, false);
 			
 			
 		}
@@ -108,7 +108,7 @@ public class DatabaseHandler {
 		    
 		} catch (SQLException ex) {
 			
-				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL UPDATE Query: " + ex, false);
+				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL UPDATE Query \"" + query + "\": " + ex, false);
 			
 		}
 	}
@@ -123,7 +123,7 @@ public class DatabaseHandler {
 		    
 		} catch (SQLException ex) {
 			
-				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL DELETE Query: " + ex, false);
+				if (!ex.toString().contains("not return ResultSet")) core.writeError("Error at SQL DELETE Query \"" + query + "\": " + ex, false);
 			
 		}
 	}

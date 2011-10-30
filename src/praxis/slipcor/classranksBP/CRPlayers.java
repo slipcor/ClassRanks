@@ -10,30 +10,38 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import praxis.slipcor.classranksBP.CRClasses;
 import praxis.slipcor.classranksBP.ClassRanks;
 
 /*
  * player class
  * 
- * v0.1.5.1 - cleanup
+ * v0.1.6 - cleanup
  * 
  * History:
  * 
- *      v0.1.5.0 - more fixes, update to CB #1337
- *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
- *      v0.1.3.3 - Possibility to pay for upranking
- * 		v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
+ *     v0.1.5.1 - cleanup
+ *     v0.1.5.0 - more fixes, update to CB #1337
+ *     v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
+ *     v0.1.3.3 - Possibility to pay for upranking
+ * 	   v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
  * 
  * @author slipcor
  */
 
 public class CRPlayers {
+	
+	private final ClassRanks c;
+	int coolDown;
+	
+	public CRPlayers(ClassRanks plugin) {
+		c = plugin;
+	}
+	
 	/*
 	 * receive a string and search for online usernames containing it
 	 */	
-	public static String search(String player) {
-		Player[] p = CRClasses.plugin.getServer().getOnlinePlayers();
+	String search(String player) {
+		Player[] p = c.getServer().getOnlinePlayers();
 		for (int i=0;i<p.length;i++) {
 			if (p[i].getName().toLowerCase().contains(player.toLowerCase())) {
 				// gotcha!
@@ -44,7 +52,7 @@ public class CRPlayers {
 		return player;
 	}
 	
-	public static boolean ifHasTakeItems(Player iPlayer, ItemStack[] isItems) {
+	boolean ifHasTakeItems(Player iPlayer, ItemStack[] isItems) {
 		ItemStack[] isItemsBackup = null;
 
         ItemStack[] isPlayerItems = iPlayer.getInventory().getContents();
@@ -98,12 +106,12 @@ public class CRPlayers {
         return true;  
 	}
 
-	public static int coolDownCheck(Player comP) {
-		if ((comP.isOp()) || (CRClasses.coolDown == 0)) {
+	int coolDownCheck(Player comP) {
+		if ((comP.isOp()) || (coolDown == 0)) {
 			return 0; // if we do not want/need to calculate the cooldown, get out of here!
 		}
 		
-		File fConfig = new File(CRClasses.plugin.getDataFolder(),"cooldowns.yml");
+		File fConfig = new File(c.getDataFolder(),"cooldowns.yml");
 		YamlConfiguration config = new YamlConfiguration();
         
         
@@ -111,16 +119,16 @@ public class CRPlayers {
         	try {
 				config.load(fConfig);
 			} catch (FileNotFoundException e) {
-				ClassRanks.log("File not found!", Level.SEVERE);
+				c.log("File not found!", Level.SEVERE);
 				e.printStackTrace();
 			} catch (IOException e) {
-				ClassRanks.log("IO Exception!", Level.SEVERE);
+				c.log("IO Exception!", Level.SEVERE);
 				e.printStackTrace();
 			} catch (InvalidConfigurationException e) {
-				ClassRanks.log("Invalid Configuration!", Level.SEVERE);
+				c.log("Invalid Configuration!", Level.SEVERE);
 				e.printStackTrace();
 			}
-        	ClassRanks.log("CoolDown file loaded!", Level.INFO);
+        	c.log("CoolDown file loaded!", Level.INFO);
         } else {
         	HashMap<String, Integer> cdx = new HashMap<String, Integer>();
         	cdx.put("slipcor", 0);
@@ -132,8 +140,8 @@ public class CRPlayers {
 
         if (cds.containsKey(comP.getName())) {
         	// Subtract the seconds waited from the needed seconds
-        	int cd = CRClasses.coolDown - (now - (Integer) cds.get(comP.getName()));
-        	if ((cd <= CRClasses.coolDown) && (cd > 0)) {
+        	int cd = coolDown - (now - (Integer) cds.get(comP.getName()));
+        	if ((cd <= coolDown) && (cd > 0)) {
         		return cd; // we still have to wait, return how many seconds
         	}
         	cds.remove(comP.getName()); // delete the value
@@ -141,12 +149,11 @@ public class CRPlayers {
 
     	cds.put(comP.getName(), now);
     	
-        config.set("cooldown", null);
         config.set("cooldown", cds);
 		try {
 			config.save(fConfig);
 		} catch (IOException e) {
-			ClassRanks.log("IO Exception!", Level.SEVERE);
+			c.log("IO Exception!", Level.SEVERE);
 			e.printStackTrace();
 		}
         

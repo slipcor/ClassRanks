@@ -22,66 +22,64 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.alta189.sqlLibrary.MySQL.mysqlCore;
 import com.alta189.sqlLibrary.SQLite.sqlCore;
-import de.bananaco.permissions.Permissions;
-import de.bananaco.permissions.worlds.WorldPermissionsManager;
 import praxis.classranks.register.payment.Method;
 import praxis.slipcor.classranksBP.CRClasses;
-import praxis.slipcor.classranksBP.CRFormats;
 
 /*
  * main class
  * 
- * v0.1.5.2 - dbload correction, onlyoneclass activation
+ * v0.1.6 - cleanup
  * 
  * History:
  * 
- *      v0.1.5.1 - cleanup
- *      v0.1.5.0 - more fixes, update to CB #1337
- *      v0.1.4.4 - minor fixes
- *      v0.1.4.3 - Multiworld "all" support
- *      v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
- * 		v0.1.4.0 - Register API
- *      v0.1.3.4 - Fix: cost parsing
+ *     v0.1.5.2 - dbload correction, onlyoneclass activation
+ *     v0.1.5.1 - cleanup
+ *     v0.1.5.0 - more fixes, update to CB #1337
+ *     v0.1.4.4 - minor fixes
+ *     v0.1.4.3 - Multiworld "all" support
+ *     v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
+ * 	   v0.1.4.0 - Register API
+ *     v0.1.3.4 - Fix: cost parsing
  * 			     - Fix: class change announcement
  *               - Cleanup: static plugin access
  *               - Cleanup: ordering
- * 		v0.1.3.3 - Possibility to require items for upranking
- * 		v0.1.3.2 - little fix of auto completion, cleanup
- * 		v0.1.3.1 - database filling via content.yml
- * 		v0.1.3.0 - big rewrite: +SQL, +classadmin
- * 		v0.1.2.8 - rewritten config, ready for ingame ranks and permissionsbukkit
- * 		v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
- * 		v0.1.2.6 - corrected permission nodes
- * 		v0.1.2.3 - world and player color customizable
- * 		v0.1.2.0 - renaming for release
+ * 	   v0.1.3.3 - Possibility to require items for upranking
+ * 	   v0.1.3.2 - little fix of auto completion, cleanup
+ * 	   v0.1.3.1 - database filling via content.yml
+ * 	   v0.1.3.0 - big rewrite: +SQL, +classadmin
+ * 	   v0.1.2.8 - rewritten config, ready for ingame ranks and permissionsbukkit
+ * 	   v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
+ * 	   v0.1.2.6 - corrected permission nodes
+ * 	   v0.1.2.3 - world and player color customizable
+ * 	   v0.1.2.0 - renaming for release
  * 		
  * 2do:
+ *     read/improve
  * 
  * @author slipcor
  */
-//TODO: ^^^^^^^^
+
 public class ClassRanks extends JavaPlugin {
-    private final CRPlayerListener playerListener = new CRPlayerListener();
-    public static CRServerListener serverListener = new CRServerListener();
-	public static WorldPermissionsManager permissionHandler; // Permissions access
-	public static Method method = null; // eConomy access
-    private static Logger Logger; // Logfile access
-	//mySQL access
-	public mysqlCore manageMySQL; // MySQL handler
-	public sqlCore manageSQLite; // SQLite handler
+    private final CRClasses classes = new CRClasses(this);
+    private final CRPlayerListener playerListener = new CRPlayerListener(classes);
+    private final CRServerListener serverListener = new CRServerListener(this);
+    private Logger Logger; // Logfile access
+	
+    Method method = null; // eConomy access
+    mysqlCore manageMySQL; // MySQL handler
+    sqlCore manageSQLite; // SQLite handler
 
 	// Settings Variables
-	public Boolean MySQL = false;
-	public String dbHost = null;
-	public String dbUser = null;
-	public String dbPass = null;
-	public String dbDatabase = null;
+	Boolean MySQL = false;
+	private String dbHost = null;
+	private String dbUser = null;
+	private String dbPass = null;
+	private String dbDatabase = null;
     
 	/*
 	 * Function that gets executed when players use a command
@@ -94,16 +92,16 @@ public class ClassRanks extends JavaPlugin {
 			String[] tStr = new String[args.length+1];
 			System.arraycopy(args, 0, tStr, 1, args.length);
 			tStr[0] = cmd.getName();
-			return CRClasses.parseCommand((Player) sender, tStr);
+			return classes.parseCommand((Player) sender, tStr);
     	}
 
     	if (cmd.getName().equalsIgnoreCase("class")){
     		// standard class command, parse it!
-    		return CRClasses.parseCommand((Player) sender, args);
+    		return classes.parseCommand((Player) sender, args);
     	}
     	if (cmd.getName().equalsIgnoreCase("classadmin")) {
     		// admin class command, parse it!
-    		return CRClasses.parseAdminCommand((Player) sender, args);
+    		return classes.parseAdminCommand((Player) sender, args);
     	}
 		return true;
     }
@@ -117,28 +115,34 @@ public class ClassRanks extends JavaPlugin {
         Logger = java.util.logging.Logger.getLogger("Minecraft");
 
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, playerListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Normal, this);
         
         loadConfig(); // load the config file       
 
-        if (!setupPermissions()) {
+        if (!classes.setupPermissions()) {
         	// Disable plugin, because useless without Permissions
         	getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        CRClasses.plugin = this; // hand over plugin
-        PluginDescriptionFile pdfFile = this.getDescription();
         
-        log("v" + pdfFile.getVersion() + " enabled", Level.INFO);
+        log("v" + this.getDescription().getVersion() + " enabled", Level.INFO);
+    }
+    
+    /*
+     * Function that gets executed on plugin deactivation
+     * (non-Javadoc)
+     * @see org.bukkit.plugin.Plugin#onDisable()
+     */
+	public void onDisable(){
+        log("disabled", Level.INFO);
     }
 
 	/*
 	 * Function that stores the values out of the config.yml into the plugin
 	 */
-	public void loadConfig() {
+	void loadConfig() {
     	if(!this.getDataFolder().exists()){
             this.getDataFolder().mkdir();
         }
@@ -195,14 +199,14 @@ public class ClassRanks extends JavaPlugin {
         if (config.getConfigurationSection("prices") != null) {
 	        // set prices
 	        Map<String, Object> prices = (Map<String, Object>) config.getConfigurationSection("prices").getValues(true);
-	        CRClasses.cost = new double[prices.size()];
+	        classes.cost = new double[prices.size()];
 	        int i = 0;
 	        for (String Key : prices.keySet()) {
 	        	String sVal = (String) prices.get(Key);
 	        	try {
-	        		CRClasses.cost[i] = Double.parseDouble(sVal);
+	        		classes.cost[i] = Double.parseDouble(sVal);
 	        	} catch (Exception e) {
-	        		CRClasses.cost[i] = 0;
+	        		classes.cost[i] = 0;
 	        		log("Unrecognized cost key '" + String.valueOf(Key) + "': "+sVal, Level.INFO);
 	        	}
 	        	i++;
@@ -210,22 +214,21 @@ public class ClassRanks extends JavaPlugin {
         }
         
 		// set subcolors
-		CRClasses.colPlayer = CRFormats.cColorbyCode(config.getString("playercolor"));
-		CRClasses.colWorld = CRFormats.cColorbyCode(config.getString("worldcolor"));
+        classes.f.setColors("world", config.getString("playercolor"), config.getString("worldcolor"));
 
 		// set other variables
-		CRClasses.rankpublic = config.getBoolean("rankpublic", false);
-		CRClasses.defaultrankallworlds = config.getBoolean("defaultrankallworlds", false);
-		CRClasses.onlyoneclass = config.getBoolean("onlyoneclass", true);
+		classes.rankpublic = config.getBoolean("rankpublic", false);
+		classes.defaultrankallworlds = config.getBoolean("defaultrankallworlds", false);
+		classes.onlyoneclass = config.getBoolean("onlyoneclass", true);
 		
 		boolean signs = config.getBoolean("signcheck", false);
 		if (signs) {
-			CRClasses.signCheck[0] = config.getString("signchoose","[choose]");
-			CRClasses.signCheck[1] = config.getString("signrankup","[rankup]");
-			CRClasses.signCheck[2] = config.getString("signrankdown","[rankdown]");
+			classes.signCheck[0] = config.getString("signchoose","[choose]");
+			classes.signCheck[1] = config.getString("signrankup","[rankup]");
+			classes.signCheck[2] = config.getString("signrankdown","[rankdown]");
 		}
 		
-		CRClasses.coolDown = config.getInt("cooldown", 0);
+		classes.crp.coolDown = config.getInt("cooldown", 0);
 		
 		ItemStack[][] itemStacks = null;
 		if (config.getConfigurationSection("items") != null) {
@@ -259,7 +262,7 @@ public class ClassRanks extends JavaPlugin {
 				}
 			}
 		}
-		CRClasses.rankItems = itemStacks;
+		classes.rankItems = itemStacks;
 		// get variables from settings handler
  		if (config.getBoolean("MySQL", false)) {
  			this.MySQL = config.getBoolean("MySQL", false);
@@ -271,10 +274,10 @@ public class ClassRanks extends JavaPlugin {
  		
  		// Check Settings
  		if (this.MySQL) {
- 			if (this.dbHost.equals(null)) { this.MySQL = false; log("MySQL is on, but host is not defined, defaulting to SQLite", Level.SEVERE); }
- 			if (this.dbUser.equals(null)) { this.MySQL = false; log("MySQL is on, but username is not defined, defaulting to SQLite", Level.SEVERE); }
- 			if (this.dbPass.equals(null)) { this.MySQL = false; log("MySQL is on, but password is not defined, defaulting to SQLite", Level.SEVERE); }
- 			if (this.dbDatabase.equals(null)) { this.MySQL = false; log("MySQL is on, but database is not defined, defaulting to SQLite", Level.SEVERE); }
+ 			if (this.dbHost == null) { this.MySQL = false; log("MySQL is on, but host is not defined, defaulting to SQLite", Level.SEVERE); }
+ 			if (this.dbUser == null) { this.MySQL = false; log("MySQL is on, but username is not defined, defaulting to SQLite", Level.SEVERE); }
+ 			if (this.dbPass == null) { this.MySQL = false; log("MySQL is on, but password is not defined, defaulting to SQLite", Level.SEVERE); }
+ 			if (this.dbDatabase == null) { this.MySQL = false; log("MySQL is on, but database is not defined, defaulting to SQLite", Level.SEVERE); }
  		}
  		
  		// Enabled SQL/MySQL
@@ -334,117 +337,24 @@ public class ClassRanks extends JavaPlugin {
  		}
 	}
     
-    /*
-     * Function that gets executed on plugin deactivation
-     * (non-Javadoc)
-     * @see org.bukkit.plugin.Plugin#onDisable()
-     */
-	public void onDisable(){
-        log("disabled", Level.INFO);
-    }
-    
 	/*
 	 * Function that logs a message to the logfile
 	 */
-    public static void log(String message, Level level){
+    void log(String message, Level level){
         Logger.log(level,"[ClassRanks] " + message);
-    }
-
-    /*
-     * Function that tries to setup the permissions system, returns result
-     */
-    private boolean setupPermissions() {
-    	// try to load permissions, return result
-    	
-        ClassRanks.permissionHandler = Permissions.getWorldPermissionsManager();
-        if(ClassRanks.permissionHandler == null){
-        	log("bPermissions not found, defaulting to OP.", Level.WARNING);
-            return false;            
-        }
-        log("<3 bPermissions", Level.INFO);
-    	return true;
     }
 
     /*
      * Function that adds a prefix to a string and sends that to given player
      */
-	public static void pmsg(Player pPlayer, String string) {
+	void msg(Player pPlayer, String string) {
 		pPlayer.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 	}
 
-	/*
-	 * Function that loads the database with values given in content.yml
-	 */
-	@SuppressWarnings("unchecked")
-	public void loadDatabase(Player pPlayer) {
-        File fConfig = new File(this.getDataFolder(),"content.yml");
-        if(!fConfig.isFile()){
-            try{ // save the default config.yml (from jar) into the data folder
-                File jarloc = new File(getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getCanonicalFile();
-                if(jarloc.isFile()){
-                    JarFile jar = new JarFile(jarloc);
-                    JarEntry entry = jar.getJarEntry("content.yml");
-                    
-                    if(entry != null && !entry.isDirectory()){
-                        InputStream in = jar.getInputStream(entry);
-                        FileOutputStream out = new FileOutputStream(fConfig);
-                        byte[] tempbytes = new byte[512];
-                        int readbytes = in.read(tempbytes,0,512);
-                        while(readbytes>-1){
-                            out.write(tempbytes,0,readbytes);
-                            readbytes = in.read(tempbytes,0,512);
-                        }
-                        out.close();
-                        in.close();
-
-                        log("Created default content.yml", Level.INFO);
-                    }
-                }
-            }catch(Exception e){
-                log("Unable to create default content.yml:" + e, Level.INFO);
-            }
-        }
-
-        YamlConfiguration config = new YamlConfiguration();
-        try {
-			config.load(fConfig);
-		} catch (FileNotFoundException e1) {
-			log("File not found!", Level.SEVERE);
-			e1.printStackTrace();
-			return;
-		} catch (IOException e1) {
-			log("IO Exception!", Level.SEVERE);
-			e1.printStackTrace();
-			return;
-		} catch (InvalidConfigurationException e1) {
-			log("Invalid Configuration!", Level.SEVERE);
-			e1.printStackTrace();
-			return;
-		} catch (Exception e) {
-			log("Did you update to v0.1.5? - Backup and remove your config!", Level.SEVERE);
-			e.printStackTrace();
-			return;
-		}
-
-        CRClasses.mysqlQuery("DELETE FROM classranks_classes WHERE 1;");
-        CRClasses.mysqlQuery("DELETE FROM classranks_ranks WHERE 1;");
-		
-        Map<String, Object> contents = (Map<String, Object>) config.getConfigurationSection("classes").getValues(true);
-        for (String cClass : contents.keySet()) {
-        	log(cClass, Level.INFO);
-        	boolean first = true;
-        	Map<String, String> ranks = (Map<String,String>) contents.get(cClass);
-        	for (String rRank : ranks.keySet()) {
-        		log(rRank, Level.INFO);
-        		if (first) {
-        			// class add
-        			CRClasses.configClassAdd(cClass, rRank, ranks.get(rRank), pPlayer);
-        			first = false;
-        		} else {
-        			// rank add
-        			CRClasses.configRankAdd(cClass, rRank, ranks.get(rRank), pPlayer);
-        		}
-        	}
-        }
+    /*
+     * Function that adds a prefix to a string and sends that to given sender
+     */
+	void msg(CommandSender sender, String string) {
+		sender.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 	}
 }
