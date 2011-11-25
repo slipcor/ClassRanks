@@ -9,6 +9,10 @@ signchoose: '[choose]'
 signrankup: '[rankup]'
 signrankdown: '[rankdown]'
 cooldown: 0
+debug: false
+checkprices: true
+checkitems: true
+checkexp: true
 
 #----------------#
 # Color Settings #
@@ -16,38 +20,59 @@ cooldown: 0
 playercolor: '&e'
 worldcolor: '&6'
 
-#--------------#
-# SQL Settings #
-#--------------#
-MySQL: false
-MySQLhost:
-MySQLuser:
-MySQLpass:
-MySQLdb:
-
 #---------------------#
 # Money Cost Settings #
 #---------------------#
 prices:
-    a: '10.00'
-    b: '50.00'
-    c: '100.00'
+    I: '10.00'
+    II: '50.00'
+    III: '100.00'
 
 #--------------------#
 # Item Cost Settings #
 #--------------------#
 items:
     I:
-        REDSTONE:2
-        COAL:2
+    - 'REDSTONE:2'
+    - 'COAL:2'
     II:
-        GOLD_INGOT:2
-        IRON_INGOT:3
+    - 'GOLD_INGOT:2'
+    - 'IRON_INGOT:3'
     III:
-        DIAMOND:5
-        LAPIS_BLOCK:5
+    - 'DIAMOND:5'
+    - 'LAPIS_BLOCK:5'
+
+#-------------------#
+# EXP Cost Settings #
+#-------------------#
+exp:
+    I: '10'
+    II: '50'
+    III: '100'
+
+#---------#
+# Classes #
+#---------#
+
+classes:
+    Fighter:
+        Warrior: 'Warrior I:&7'
+        SWarrior: 'Warrior II:&7'
+        MWarrior: 'Warrior III:&8'
+    Business:
+        Trader: 'Trader I:&a'
+        STrader: 'Trader II:&a'
+        MTrader: 'Trader III:&2'
+
+#---------#
+# Players #
+#---------#
+
+players:
+    Notch:
+        Fighter: Warrior
 
 #------------------#
 # Config debugging #
 #------------------#
-cversion: '0150'
+cversion: '0200'

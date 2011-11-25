@@ -1,4 +1,4 @@
-package praxis.classranks.register.payment;
+package net.slipcor.classranks.register.payment;
 
 import org.bukkit.plugin.Plugin;
 

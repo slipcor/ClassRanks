@@ -1,43 +1,29 @@
-package praxis.slipcor.classranksBP;
+package net.slipcor.classranks.managers;
 
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 
 /*
- * string formating class
+ * String formating class
  * 
- * v0.1.6 - cleanup
+ * v0.2.0 - mayor rewrite; no SQL; multiPermissions
  * 
  * History:
  * 
- *     v0.1.4.3 - Multiworld "all" support
- *     v0.1.3.4 - Fix: cost parsing
- * 	            - Fix: class change announcement
- *              - Cleanup: static plugin access
- *              - Cleanup: ordering
- * 	   v0.1.3.3 - Possibility to require items for upranking
- * 	   v0.1.3.0 - big rewrite: +SQL, +classadmin
- * 	   v0.1.2.8 - rewritten config, ready for ingame ranks and permissionsbukkit
- * 	   v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
- * 	   v0.1.2.3 - world and player color customizable
- * 	   v0.1.2.0 - renaming for release
+ *     v0.1.6 - cleanup
  * 
  * @author slipcor
  */
 
-public class CRFormats {
+public class FormatManager {
 	private ChatColor colPlayer = ChatColor.YELLOW; // Color: Playername
 	private ChatColor colWorld = ChatColor.GOLD;   // Color: Worldname
-	private final CRPlayers p;
-    
-    public CRFormats(CRPlayers crp) {
-    	p = crp;
-    }
+
     /*
      * Wrap a string in the desired color
      */
 	String formatPlayer(String str) {
-		String tStr = p.search(str);
+		String tStr = PlayerManager.search(str);
 		if (!tStr.equals("")) {
 			// if a valid playername: replace
 			str = tStr;
@@ -67,9 +53,22 @@ public class CRFormats {
 	}
 	
 	/*
+	 * read a string array and return a readable string
+	 */
+	public static String formatStringArray(String[] s) {
+		if (s == null)
+			return "NULL";
+		String result = "";
+		for (int i=0; i<s.length; i++) {
+			result = result + (result.equals("")?"":",") + s[i];
+		}
+		return result;
+	}
+	
+	/*
 	 * read an array of ItemStack and format it
 	 */
-    String formatItemStacks(ItemStack[] itemStacks) {
+    public static String formatItemStacks(ItemStack[] itemStacks) {
 		String result = "";
     	for (int i=0;i<itemStacks.length;i++) {
     		if (!result.equals("")) {
@@ -87,7 +86,7 @@ public class CRFormats {
     /*
      * store the config colors into our private values
      */
-	void setColors(String sColor, String sPlayerCode, String sWorldCode) {
+	public void setColors(String sColor, String sPlayerCode, String sWorldCode) {
 		colPlayer = cColorbyAmpedCode(sPlayerCode);
 		colWorld = cColorbyAmpedCode(sWorldCode);
 	}

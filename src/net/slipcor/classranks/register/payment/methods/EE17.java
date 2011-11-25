@@ -1,4 +1,4 @@
-package praxis.classranks.register.payment.methods;
+package net.slipcor.classranks.register.payment.methods;
 
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.api.Economy;
@@ -6,9 +6,10 @@ import com.earth2me.essentials.api.NoLoanPermittedException;
 import com.earth2me.essentials.api.UserDoesNotExistException;
 
 
+import net.slipcor.classranks.register.payment.Method;
+
 import org.bukkit.plugin.Plugin;
 
-import praxis.classranks.register.payment.Method;
 
 /**
  * Essentials 17 Implementation of Method

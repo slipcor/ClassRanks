@@ -1,9 +1,10 @@
-package praxis.classranks.register.payment.methods;
+package net.slipcor.classranks.register.payment.methods;
 
 import cosine.boseconomy.BOSEconomy;
+import net.slipcor.classranks.register.payment.Method;
+
 import org.bukkit.plugin.Plugin;
 
-import praxis.classranks.register.payment.Method;
 
 /**
  * BOSEconomy 7 Implementation of Method

@@ -1,11 +1,11 @@
-package praxis.classranks.register.payment.methods;
+package net.slipcor.classranks.register.payment.methods;
 
 import me.ashtheking.currency.Currency;
 import me.ashtheking.currency.CurrencyList;
+import net.slipcor.classranks.register.payment.Method;
 
 import org.bukkit.plugin.Plugin;
 
-import praxis.classranks.register.payment.Method;
 
 /**
  * MultiCurrency Method implementation.

@@ -1,7 +1,8 @@
 name: ClassRanks
-main: praxis.slipcor.classranksBP.ClassRanks
-version: 0.1.6.0
+main: net.slipcor.classranks.ClassRanks
+version: 0.2.0.20
 author: slipcor
+soft-depends: [bPermissions,iConomy,BOSEconomy,MultiCurrency,Essentials,PermissionsEx]
 commands:
     class:
         description: Lets users choose a class / change classes
@@ -12,7 +13,6 @@ commands:
            /class [rankup/rankdown] [username] {world} | Rank user up/down 
            /class [rankup/rankdown] | Rank yourself up/down
            /class get [username] {world} | Get the active rank of a user
-           /class dbload | Load the class from content.yml
     rankdown:
         description: Rank down yourself or others
         usage: |
