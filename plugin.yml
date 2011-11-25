@@ -1,0 +1,63 @@
+name: ClassRanks
+main: net.slipcor.classranks.ClassRanks
+version: 0.2.0.20
+author: slipcor
+soft-depends: [bPermissions,iConomy,BOSEconomy,MultiCurrency,Essentials,PermissionsEx]
+commands:
+    class:
+        description: Lets users choose a class / change classes
+        usage: |
+           /class [classname] | Choose the class [classname]
+           /class [add] {username} {classname} {world} | Add user to a class
+           /class [remove] {username} {world} | Remove user from a class
+           /class [rankup/rankdown] [username] {world} | Rank user up/down 
+           /class [rankup/rankdown] | Rank yourself up/down
+           /class get [username] {world} | Get the active rank of a user
+    rankdown:
+        description: Rank down yourself or others
+        usage: |
+           /rankdown [username] | Rank down yourself or username 
+    rankup:
+        description: Rank up yourself or others
+        usage: |
+           /rankup [username] | Rank up yourself or username 
+    classadmin:
+        description: Administrate the classes
+        usage: |
+           /classadmin add class [classname] [permname] [displayname] [color]
+           /classadmin add rank  [classname] [permname] [displayname] [color]
+           /classadmin change class [classname] [newname]
+           /classadmin change rank  [classname] [rankname] [displayname] [color]
+           /classadmin remove class [classname]
+           /classadmin remove rank [classname] [rankname]
+permissions:
+    classranks.*:
+        description: Gives access to all commands
+        children:
+            classranks.rankdown: true
+            classranks.self.rank: true
+            classranks.self.addremove: true
+    classranks.admin.*:
+        description: Gives access to all admin commands
+        children:
+            classranks.admin.rank: true
+            classranks.admin.addremove: true
+            classranks.admin.admin: true
+    classranks.rankdown:
+        description: Allows you to rank down
+        default: op
+    classranks.self.rank:
+        description: Allows you to rank yourself
+        default: true
+    classranks.self.addremove:
+        description: Allows you to add/remove your class
+        default: true
+    classranks.admin.rank:
+        description: Allows you to rank other people
+        default: op
+    classranks.admin.addremove:
+        description: Allows you to add/remove other peoples classes
+        default: op
+    classranks.admin.admin:
+        description: Allows you to administrate the classes (db)
+        default: op
