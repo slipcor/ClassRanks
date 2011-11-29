@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -17,6 +16,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.slipcor.classranks.commands.ClassAdminCommand;
+import net.slipcor.classranks.commands.ClassCommand;
+import net.slipcor.classranks.commands.RankdownCommand;
+import net.slipcor.classranks.commands.RankupCommand;
 import net.slipcor.classranks.core.Rank;
 import net.slipcor.classranks.listeners.*;
 import net.slipcor.classranks.managers.ClassManager;
@@ -30,10 +33,11 @@ import net.slipcor.classranks.register.payment.Method;
 /*
  * main class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * v0.2.1 - internal command restructuring
  * 
  * History:
  * 
+ *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
  *     v0.1.6 - cleanup
  *     v0.1.5.2 - dbload correction, onlyoneclass activation
  *     v0.1.5.1 - cleanup
@@ -56,36 +60,6 @@ public class ClassRanks extends JavaPlugin {
     public CRPermissionHandler perms; // Permissions access
     
     @Override
-	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-    	if (!(sender instanceof Player)) {
-    		msg(sender, "Console access is not implemented. If you want that, visit:");
-    		msg(sender, "http://dev.bukkit.org/server-mods/classranks/");
-    		return true;
-    	}
-    	
-		if ((cmd.getName().equalsIgnoreCase("rankup")) || (cmd.getName().equalsIgnoreCase("rankdown"))) {
-			// if we use the shortcut /rankup or /rankdown, shift the array
-			String[] tStr = new String[args.length+1];
-			System.arraycopy(args, 0, tStr, 1, args.length);
-			tStr[0] = cmd.getName();
-			db.i("shortcut detected, parsed '" + FormatManager.formatStringArray(args) + "' to '" + tStr.toString() + "'");
-			return cmdMgr.parseCommand((Player) sender, tStr);
-    	}
-
-    	if (cmd.getName().equalsIgnoreCase("class")){
-    		// standard class command, parse it!
-    		db.i("/class detected! parsing...");
-    		return cmdMgr.parseCommand((Player) sender, args);
-    	}
-    	if (cmd.getName().equalsIgnoreCase("classadmin")) {
-    		// admin class command, parse it!
-    		db.i("/classadmin detected! parsing...");
-    		return cmdMgr.parseAdminCommand((Player) sender, args);
-    	}
-		return true;
-    }
-    
-    @Override
 	public void onEnable(){    	
         Logger = java.util.logging.Logger.getLogger("Minecraft");
 
@@ -96,6 +70,11 @@ public class ClassRanks extends JavaPlugin {
         
         @SuppressWarnings("unused")
 		ClassManager cm = new ClassManager(this);
+
+        getCommand("class").setExecutor(new ClassCommand(this,cmdMgr));
+        getCommand("classadmin").setExecutor(new ClassAdminCommand(this,cmdMgr));
+        getCommand("rankup").setExecutor(new RankupCommand(this,cmdMgr));
+        getCommand("rankdown").setExecutor(new RankdownCommand(this,cmdMgr));
         
         load_config(); // load the config file
         
@@ -256,7 +235,7 @@ public class ClassRanks extends JavaPlugin {
 		db.i("to " + pPlayer.getName() + ": "+ string);
 	}
     
-	private void msg(CommandSender sender, String string) {
+	public void msg(CommandSender sender, String string) {
 		sender.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 	}
 
