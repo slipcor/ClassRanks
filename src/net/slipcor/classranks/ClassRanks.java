@@ -62,6 +62,7 @@ public class ClassRanks extends JavaPlugin {
     @Override
 	public void onEnable(){    	
         Logger = java.util.logging.Logger.getLogger("Minecraft");
+		com.arandomappdev.bukkitstats.CallHome.load(this);
 
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
