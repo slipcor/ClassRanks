@@ -2,6 +2,7 @@
 # General Settings #
 #------------------#
 rankpublic: true
+trackRanks: false
 defaultrankallworlds: false
 onlyoneclass: true
 signcheck: false

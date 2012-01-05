@@ -54,6 +54,7 @@ public class ClassRanks extends JavaPlugin {
     private final CRPlayerListener playerListener = new CRPlayerListener(this, cmdMgr);
     private final CRServerListener serverListener = new CRServerListener(this);
 	private final DebugManager db = new DebugManager(this);
+	public boolean trackRanks = false;
     
     private Logger Logger; // Logfile access
     public Method method = null; // eConomy access
@@ -62,7 +63,7 @@ public class ClassRanks extends JavaPlugin {
     @Override
 	public void onEnable(){    	
         Logger = java.util.logging.Logger.getLogger("Minecraft");
-		com.arandomappdev.bukkitstats.CallHome.load(this);
+		//com.arandomappdev.bukkitstats.CallHome.load(this);
 
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
@@ -82,7 +83,7 @@ public class ClassRanks extends JavaPlugin {
         if (pm.getPlugin("bPermissions") != null) {
         	db.i("bPermissions found!");
         	this.perms = new bPermissionsHandler(this);
-        } else if (pm.getPlugin("PermissionsEX") != null) {
+        } else if (pm.getPlugin("PermissionsEx") != null) {
         	db.i("PermissionsEX found!");
         	this.perms = new PermissionsEXHandler(this);
         } else {
@@ -151,6 +152,7 @@ public class ClassRanks extends JavaPlugin {
 		cmdMgr.rankpublic = getConfig().getBoolean("rankpublic", false);
 		cmdMgr.defaultrankallworlds = getConfig().getBoolean("defaultrankallworlds", false);
 		cmdMgr.onlyoneclass = getConfig().getBoolean("onlyoneclass", true);
+		trackRanks = getConfig().getBoolean("trackRanks", false);
 		
 		boolean signs = getConfig().getBoolean("signcheck", false);
 		if (signs) {
@@ -168,7 +170,7 @@ public class ClassRanks extends JavaPlugin {
 			Map<String, Object> items = (Map<String, Object>) getConfig().getConfigurationSection("items").getValues(false);
 			if (items == null) {
 	    		db.i("items invalid, setting to null");
-				itemStacks = new ItemStack[3][1];
+				itemStacks = new ItemStack[ClassManager.getClasses().size()][1];
 			} else {
 				// for each items => ItemStack[][1,2,3]
 				int iI = 0;

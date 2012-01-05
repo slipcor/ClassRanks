@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import net.slipcor.classranks.ClassRanks;
-
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -151,4 +150,6 @@ public class PlayerManager {
         
 		return 0;
 	}
+	
+
 }

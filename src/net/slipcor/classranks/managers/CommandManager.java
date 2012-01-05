@@ -8,6 +8,7 @@ import net.slipcor.classranks.core.Rank;
 import net.slipcor.classranks.managers.PlayerManager;
 import net.slipcor.classranks.register.payment.Method.MethodAccount;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -33,8 +34,8 @@ public class CommandManager {
 	private final PlayerManager pm;
 	private final DebugManager db;
 
-	public double[] moneyCost = new double[3]; // Costs
-	public int[] expCost = new int[3]; // EXP Costs
+	public double[] moneyCost = new double[ClassManager.getClasses().size()]; // Costs
+	public int[] expCost = new int[ClassManager.getClasses().size()]; // EXP Costs
 	public boolean rankpublic; // do we spam changed to the public?
 	public boolean defaultrankallworlds; // do ppl rank themselves in all worlds?
 	public boolean onlyoneclass; // only maintain one class
@@ -164,7 +165,7 @@ public class CommandManager {
 		}
 		
 		if (rankOffset > 0) {
-			if (expCost != null && expCost[cRank+1] > 0) {
+			if (expCost != null && expCost.length > 0 && expCost[cRank+1] > 0) {
 				if (comP.getExperience() < expCost[cRank+1]) {
 					plugin.msg(comP, "You don't have enough experience! You need "+expCost[cRank+1]);
 					return true;
@@ -308,6 +309,9 @@ public class CommandManager {
 			args[1] = PlayerManager.search(args[1]);
 			String sPermName = plugin.perms.getPermNameByPlayer(world, args[1]);
 			if (!sPermName.equals("")) {
+				if (plugin.trackRanks) {
+					ClassManager.saveClassProgress(Bukkit.getPlayer(args[1]));
+				}
 				int i = 0; // combo breaker
 				while (!sPermName.equals("")) {
 					db.i("removing rank " + sPermName);
@@ -321,6 +325,9 @@ public class CommandManager {
 						// only one class per player :p
 						plugin.msg(pPlayer,"Player " + fm.formatPlayer(args[1]) + " already already has the rank " + c_Color + cDispName + "!");
 					} else if (args[0].equalsIgnoreCase("remove")) {
+						if (plugin.trackRanks) {
+							ClassManager.saveClassProgress(Bukkit.getPlayer(args[1]));
+						}
 						plugin.perms.rankRemove(world, args[1], tempRank.getPermName()); // do it!
 						
 						if ((!pPlayer.getName().equalsIgnoreCase(args[1]))) {
@@ -371,7 +378,21 @@ public class CommandManager {
 			String cDispName = tempRank.getDispName(); // Display rank name
 			ChatColor c_Color = tempRank.getColor();    // Rank color
 			
-			plugin.perms.classAdd(world, args[1], cPermName);
+			if (plugin.trackRanks) {
+				int rID =  ClassManager.loadClassProcess(Bukkit.getPlayer(args[1]), tempRank.getSuperClass());
+				
+				tempRank = tempRank.getSuperClass().ranks.get(rID);
+				
+				cPermName = tempRank.getPermName(); // Display rank name
+				cDispName = tempRank.getDispName(); // Display rank name
+				c_Color = tempRank.getColor();    // Rank color
+				
+				String sRank = tempRank.getPermName();
+				plugin.perms.rankAdd(world, args[1], sRank);
+			} else {
+				plugin.perms.classAdd(world, args[1], cPermName);
+			}
+			
 			if ((rankpublic) || (!pPlayer.getName().equalsIgnoreCase(args[1]))) {
 				plugin.getServer().broadcastMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + fm.formatPlayer(args[1]) + " now is a " + c_Color + cDispName);
 				return true;
@@ -418,7 +439,9 @@ public class CommandManager {
 
     			String cDispName = rank.getDispName(); // Display rank name
     			ChatColor c_Color = rank.getColor();    // Rank color
-    			
+    			if (plugin.trackRanks) {
+					ClassManager.saveClassProgress(pPlayer);
+				}
     			plugin.perms.rankRemove(defaultrankallworlds?"all":pPlayer.getWorld().getName(), pPlayer.getName(), rank.getPermName());
     			
     			plugin.msg(pPlayer,"You were removed from rank " + c_Color + cDispName + ChatColor.WHITE + " in " + fm.formatWorld(defaultrankallworlds?"all":pPlayer.getWorld().getName()) + "!");
@@ -431,16 +454,6 @@ public class CommandManager {
 			
 			// /class [classname]
 			
-    		// Check if the player has got the money
-            if (plugin.method != null) {
-				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
-            	if (!ma.hasEnough(moneyCost[0])) {
-            
-	                plugin.msg(pPlayer,"You don't have enough money to choose your class! (" + plugin.method.format(moneyCost[0]) + ")");
-	                return true;
-            	}
-            }
-			db.i("money check successful");
 
 			String sRankInfo = plugin.perms.getPermNameByPlayer(pPlayer.getWorld().getName(), pPlayer.getName());
 			
@@ -448,9 +461,16 @@ public class CommandManager {
 				plugin.msg(pPlayer,"You already have the rank " + sRankInfo + "!");
 				return true;
 			}
-			String s = ClassManager.getFirstPermNameByClassName(args[0]);
+			
+			String s = "";
+			
+			if (plugin.trackRanks) {
+				s = ClassManager.getFirstPermNameByClassName(args[0], pPlayer.getName());
+			} else {
+				s = ClassManager.getFirstPermNameByClassName(args[0]);
+			}
 
-			if (s == null) {
+			if (s == null || s.equals("")) {
 				plugin.msg(pPlayer,"The class you have entered does not exist!");
 				return true;
 			}
@@ -462,20 +482,36 @@ public class CommandManager {
 			}
 			db.i("rank check successful");
 			
-			if (expCost != null && (expCost[0] > 0)) {
-				if (pPlayer.getExperience() < expCost[0]) {
-					plugin.msg(pPlayer, "You don't have enough experience! You need "+expCost[0]);
+			int rID = 0;
+			if (plugin.trackRanks) {
+				rID= ClassManager.loadClassProcess(pPlayer, rank.getSuperClass());
+			}
+    		// Check if the player has got the money
+            if (plugin.method != null) {
+				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
+            	if (!ma.hasEnough(moneyCost[rID])) {
+            
+	                plugin.msg(pPlayer,"You don't have enough money to choose your class! (" + plugin.method.format(moneyCost[rID]) + ")");
+	                return true;
+            	}
+            }
+			db.i("money check successful");
+			
+			
+			if (expCost != null && expCost.length > 0 && (expCost[rID] > 0)) {
+				if (pPlayer.getExperience() < expCost[rID]) {
+					plugin.msg(pPlayer, "You don't have enough experience! You need "+expCost[rID]);
 					return true;
 				}
-				pPlayer.setExperience(pPlayer.getExperience() - expCost[0]);
-				plugin.msg(pPlayer, "You paid " + expCost[0] + " experience points!");
+				pPlayer.setExperience(pPlayer.getExperience() - expCost[rID]);
+				plugin.msg(pPlayer, "You paid " + expCost[rID] + " experience points!");
 			}
 			db.i("exp check successful");
 			
-			if (rankItems != null && (rankItems[0] != null) && (!FormatManager.formatItemStacks(rankItems[0]).equals(""))) {
-				if (!pm.ifHasTakeItems(pPlayer, rankItems[0])) {
+			if (rankItems != null && (rankItems[rID] != null) && (!FormatManager.formatItemStacks(rankItems[rID]).equals(""))) {
+				if (!pm.ifHasTakeItems(pPlayer, rankItems[rID])) {
 					plugin.msg(pPlayer, "You don't have the required items!");
-					plugin.msg(pPlayer, "(" + FormatManager.formatItemStacks(rankItems[0]) + ")");
+					plugin.msg(pPlayer, "(" + FormatManager.formatItemStacks(rankItems[rID]) + ")");
 					return true;
 				}
 			}
@@ -494,12 +530,12 @@ public class CommandManager {
 				plugin.msg(pPlayer,"You have chosen your class! You now have the rank " + c_Color + cDispName);
 			}	
 			
-			if ((plugin.method != null) && (moneyCost[0] > 0)) {
+			if ((plugin.method != null) && (moneyCost[rID] > 0)) {
 				// if it costs anything at all
 
 				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
-				ma.subtract(moneyCost[0]);
-				pPlayer.sendMessage(ChatColor.DARK_GREEN + "[" + ChatColor.WHITE + "Money" + ChatColor.DARK_GREEN +  "] " + ChatColor.RED + "Your account had " + ChatColor.WHITE + plugin.method.format(moneyCost[0]) + ChatColor.RED + " debited.");
+				ma.subtract(moneyCost[rID]);
+				pPlayer.sendMessage(ChatColor.DARK_GREEN + "[" + ChatColor.WHITE + "Money" + ChatColor.DARK_GREEN +  "] " + ChatColor.RED + "Your account had " + ChatColor.WHITE + plugin.method.format(moneyCost[rID]) + ChatColor.RED + " debited.");
 			}
 			return true;
 		}

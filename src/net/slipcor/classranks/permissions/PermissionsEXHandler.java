@@ -17,7 +17,7 @@ import ru.tehkode.permissions.PermissionManager;
 /*
  * PermissionsEX handler class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * v0.2.1 - PEX fix
  * 
  * History:
  * 
@@ -39,6 +39,7 @@ public class PermissionsEXHandler extends CRPermissionHandler {
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
 		db.i("isInGroup: player " + player + ", world: " + world + ", perms: " + permName + ": " + String.valueOf(permissionHandler.getUser(player).inGroup(permName)));
+
 		return permissionHandler.getUser(player).inGroup(permName);
 	}
 
@@ -77,7 +78,7 @@ public class PermissionsEXHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					permissionHandler.getUser(player).addGroup(cString, world);
+					permissionHandler.getUser(player).addGroup(cString, worlds[i]);
 					db.i("added group " + cString + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + cString + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -101,7 +102,7 @@ public class PermissionsEXHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					permissionHandler.getUser(player).addGroup(rank, world);
+					permissionHandler.getUser(player).addGroup(rank, worlds[i]);
 					db.i("added rank " + rank + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + rank + " or user " + player + " not found in world " + worlds[i], Level.WARNING);

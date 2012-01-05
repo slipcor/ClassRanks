@@ -69,7 +69,12 @@ public class SuperPermissionsHandler extends CRPermissionHandler {
      */
 	@Override
 	public void classAdd(String world, String player, String cString) {
-		String firstRank = ClassManager.getFirstPermNameByClassName(cString);
+		String firstRank = null;
+		if (plugin.trackRanks) {
+			firstRank = ClassManager.getFirstPermNameByClassName(cString, player);
+		} else {
+			firstRank = ClassManager.getFirstPermNameByClassName(cString);
+		}
 		plugin.getConfig().set("players." + player + "." + cString, firstRank);
 		db.i("added group " + cString + " to player " + player + ", no world support");
 		plugin.saveConfig();

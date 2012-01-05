@@ -6,6 +6,7 @@ import net.slipcor.classranks.ClassRanks;
 import net.slipcor.classranks.core.Class;
 import net.slipcor.classranks.core.Rank;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -36,13 +37,21 @@ public class ClassManager {
 	}
 
 	public static String getFirstPermNameByClassName(String cString) {
+		// standard version: get first rank
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
 				if (c.name.equals(cString))
 					return r.getPermissionName();
-				else
-					continue;
 			}
+		}
+		return null;
+	}
+
+	public static String getFirstPermNameByClassName(String cString, String sPlayer) {
+		// extended version: get rank
+		for (Class c : classes) {
+			if (c.name.equals(cString))
+				return c.ranks.get(ClassManager.loadClassProcess(Bukkit.getPlayer(sPlayer), c)).getPermissionName();
 		}
 		return null;
 	}
@@ -160,6 +169,7 @@ public class ClassManager {
 		return true;
 	}
 
+
 	public static boolean configClassAdd(String sClassName, String sPermName, String sDispNameColor, Player pPlayer) {
 		Class cClass = getClassbyClassName(sClassName);
 		if (cClass == null) {
@@ -249,5 +259,58 @@ public class ClassManager {
 		}
 		plugin.msg(pPlayer, "Class not found: " + sClassName);
 		return true;
+	}
+	
+	public static void saveClassProgress(Player pPlayer) {
+		db.i("saving class process");
+		String s = plugin.getConfig().getString("progress."+pPlayer.getName());
+		db.i("progress of "+pPlayer.getName()+": "+s);
+		Rank rank = ClassManager.getRankByPermName(plugin.perms.getPermNameByPlayer(pPlayer.getWorld().getName(), pPlayer.getName()));
+		if (rank == null) {
+			db.i("rank is null!");
+			return;
+		}
+
+		int rankID = rank.getSuperClass().ranks.indexOf(rank);
+		db.i("rank ID: "+rankID);
+		int classID = classes.indexOf(rank.getSuperClass());
+		db.i("classID: "+classID);
+		
+		if (s != null && s.length() == classes.size()) {
+			
+			char[] c = s.toCharArray();
+			c[classID] = String.valueOf(rankID).charAt(0);
+			db.i("new c[classID]: "+c[classID]);
+
+			db.i("saving: "+c.toString());
+			plugin.getConfig().set("progress."+pPlayer.getName(), String.valueOf(c.toString()));
+			
+			return;
+		}
+
+		db.i("no entry yet!");
+		String result = "";
+		for (int i = 0; i<classes.size();i++) {
+			if (i == classID) {
+				result += String.valueOf(rankID);
+			} else {
+				result += "0";
+			}
+		}
+		db.i("setting: "+result);
+		plugin.getConfig().set("progress."+pPlayer.getName(), String.valueOf(result));
+		plugin.saveConfig();
+	}
+	
+	public static int loadClassProcess(Player pPlayer, Class cClass) {
+		try {
+			String s = plugin.getConfig().getString("progress."+pPlayer.getName());
+			int classID = classes.indexOf(cClass);
+			
+			int rankID = Integer.parseInt(String.valueOf(s.charAt(classID)));
+			return rankID;
+		} catch (Exception e) {
+			return 0;
+		}
 	}
 }
