@@ -13,7 +13,7 @@ import net.slipcor.classranks.managers.DebugManager;
 /*
  * SuperPermissions handler class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * v0.2.1 - PEX fix, SuperPerms fix
  * 
  * History:
  * 
@@ -96,7 +96,7 @@ public class SuperPermissionsHandler extends CRPermissionHandler {
 	 */
 	@Override
 	public void rankRemove(String world, String player, String cString) {
-		plugin.getConfig().set("players." + player + "." + cString, null);
+		plugin.getConfig().set("players." + player, null);
 		db.i("removed rank " + cString + " from player " + player + ", no world support");
 		plugin.saveConfig();
 	}
