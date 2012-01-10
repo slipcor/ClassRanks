@@ -67,7 +67,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 	@Override
     public boolean hasPerms(Player comP, String string, String world) {
 		db.i("player hasPerms: " + comP.getName() + ", world: " + world + ", perm: "  + string + " : " + String.valueOf( permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains(string)));
-		return permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains(string);
+		return comP.hasPermission(string);
 	}
 
     

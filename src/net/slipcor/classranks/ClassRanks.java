@@ -96,6 +96,7 @@ public class ClassRanks extends JavaPlugin {
         log("v" + this.getDescription().getVersion() + " enabled", Level.INFO);
     }
     
+    @Override
 	public void onDisable() {
         log("disabled", Level.INFO);
     }
@@ -180,7 +181,7 @@ public class ClassRanks extends JavaPlugin {
 					itemStacks[iI] = new ItemStack[values.size()];
 		    		db.i("creating itemstack:");
 					for (int iJ = 0 ; iJ < values.size() ; iJ++) {
-						String[] vValue = ((String)values.get(iJ)).split(":");
+						String[] vValue = (String.valueOf(values.get(iJ))).split(":");
 						
 						int vAmount = vValue.length > 1 ? Integer.parseInt(vValue[1]) : 1;
 						try {
@@ -190,8 +191,16 @@ public class ClassRanks extends JavaPlugin {
 				                );
 
 						} catch (Exception e) {
-							log("Unrecognized reagent: " + vValue[0], Level.WARNING);
-							continue;
+							try {
+								itemStacks[iI][iJ] = new ItemStack(
+					                    Integer.valueOf(vValue[0]),
+					                    vAmount
+					                );
+							} catch (Exception e2) {
+
+								log("Unrecognized reagent: " + vValue[0], Level.WARNING);
+								continue;
+							}
 						}
 					}
 					db.i(iI + " - " + FormatManager.formatItemStacks(itemStacks[iI]));
