@@ -1,0 +1,69 @@
+
+CHANGELOG
+
+v0.2
+
+    v0.2.1 - internal command restructuring (no visible changes)
+    v0.2.0 - mayor rewrite, SQL database dropped, multiPermissions, debug mode 
+
+v0.1.5
+
+    v0.1.5.2 - dbload change: /class dbload deletes database in the first place!
+    v0.1.5.0 - Update to #1337 config system 
+
+v0.1.4
+
+    v0.1.4.4 - minor fixes
+    v0.1.4.3 - Multiworld "all" support
+    v0.1.4.2 - Reagents => Items ; Cooldown ; Sign usage
+    v0.1.4.1 - method NPE Fix
+    v0.1.4.0 - Register API 
+
+v0.1.3
+
+    v0.1.3.4
+        Fix: cost parsing
+        Fix: class change announcement
+        Cleanup: static plugin access
+        Cleanup: ordering
+    v0.1.3.3 - Possibility to require items for upranking
+    v0.1.3.2 - little fix of auto completion, cleanup
+    v0.1.3.1 - database filling via content.yml
+    v0.1.3.0 - big rewrite: +SQL, +classadmin 
+
+v0.1.2
+
+    v0.1.2.8 - rewritten config, ready for ingame ranks and permissionsbukkit
+    v0.1.2.7 - consistency tweaks, removed debugging, username autocomplete
+    v0.1.2.6 - corrected permission nodes
+    v0.1.2.5 - command /class get *playername* {*world*}
+    v0.1.2.4 - FIX: players now CAN add/remove their OWN class if they have permission
+    v0.1.2.3 - world and player color customizable
+    v0.1.2.2 - iConomy now is optional
+    v0.1.2.1 - fix: /class *name* now only working for rank 1 classes
+    v0.1.2.0 - little tweaks for release 
+
+v0.1.1
+
+    v0.1.1.2 - Classes have their own class
+    v0.1.1.1 - Formats have their own class
+    v0.1.1.0 - Plugin reload, display customizable class names, everything rewritten 
+
+v0.1.0
+
+
+    v0.1.0.2 Cost for rankup to second and third rank, config access is now static
+    v0.1.0.1 Permission nodes, public announcement, more coloring
+    v0.1.0.0 Rewritten, new config and different group management 
+
+v0.0.1
+
+    v0.0.1.2 - Interface, getRank to read out the Rank
+    v0.0.1.1 - (OP) Rankup/Rankdown user
+    v0.0.1.0 - (OP) Group add / delete 
+
+v0.0.0
+
+    v0.0.0.3 - Color support
+    v0.0.0.2 - iConomy support
+    v0.0.0.1 - basic functionality: choose your class via group if you didn't already

@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 /*
  * class manager class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * v0.2.2 - mayor rewrite; no SQL; multiPermissions
  * 
  * History:
  * 
@@ -41,7 +41,7 @@ public class ClassManager {
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
 				if (c.name.equals(cString))
-					return r.getPermissionName();
+					return r.getPermName();
 			}
 		}
 		return null;
@@ -51,7 +51,7 @@ public class ClassManager {
 		// extended version: get rank
 		for (Class c : classes) {
 			if (c.name.equals(cString))
-				return c.ranks.get(ClassManager.loadClassProcess(Bukkit.getPlayer(sPlayer), c)).getPermissionName();
+				return c.ranks.get(ClassManager.loadClassProcess(Bukkit.getPlayer(sPlayer), c)).getPermName();
 		}
 		return null;
 	}
@@ -59,7 +59,7 @@ public class ClassManager {
 	public static String getClassNameByPermName(String rank) {
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
-				if (r.getPermissionName().equals(rank))
+				if (r.getPermName().equals(rank))
 					return c.name;
 			}
 		}
@@ -70,9 +70,9 @@ public class ClassManager {
 		String sPermName = "";
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
-				db.i(c.name + " => " + r.getPermissionName());
-				if (permGroups.contains(r.getPermissionName()))
-					sPermName = r.getPermissionName();
+				db.i(c.name + " => " + r.getPermName());
+				if (permGroups.contains(r.getPermName()))
+					sPermName = r.getPermName();
 			}
 		}
 		return sPermName;
@@ -81,7 +81,7 @@ public class ClassManager {
 	public static Rank getRankByPermName(String sPermName) {
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
-				if (r.getPermissionName().equals(sPermName))
+				if (r.getPermName().equals(sPermName))
 					return r;
 			}
 		}
@@ -128,7 +128,7 @@ public class ClassManager {
 	public static boolean rankExists(String sRank) {
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
-				if (r.getPermissionName().equals(sRank))
+				if (r.getPermName().equals(sRank))
 					return true;
 			}
 		}

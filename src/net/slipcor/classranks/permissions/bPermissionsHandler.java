@@ -40,6 +40,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
+		permName = permName.toLowerCase();
 		PermissionSet ps = permissionHandler.getPermissionSet(world);
 		List<String> list = ps.getGroups(player);
 

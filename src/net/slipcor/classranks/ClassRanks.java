@@ -30,21 +30,10 @@ import net.slipcor.classranks.managers.PlayerManager;
 import net.slipcor.classranks.permissions.*;
 import net.slipcor.classranks.register.payment.Method;
 
-/*
- * main class
+/**
+ * main plugin class
  * 
- * v0.2.1 - internal command restructuring
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
- *     v0.1.6 - cleanup
- *     v0.1.5.2 - dbload correction, onlyoneclass activation
- *     v0.1.5.1 - cleanup
- *     v0.1.5.0 - more fixes, update to CB #1337
- * 
- * 2do:
- *     comment
+ * @version v0.2.2
  * 
  * @author slipcor
  */
@@ -100,7 +89,10 @@ public class ClassRanks extends JavaPlugin {
 	public void onDisable() {
         log("disabled", Level.INFO);
     }
-
+    
+    /**
+     * (re)load the config
+     */
 	public void load_config() {
 		if (getConfig() == null || getConfig().get("debug") == null)
 			getConfig().options().copyDefaults(true);
@@ -237,28 +229,46 @@ public class ClassRanks extends JavaPlugin {
 		
 		saveConfig();
 	}
-
+	
+	/**
+	 * log a prefixed message to the logfile
+	 * @param message the message to log
+	 * @param level the logging level
+	 */
 	public void log(String message, Level level){
         Logger.log(level,"[ClassRanks] " + message);
     }
 	
+	/**
+	 * send a message to a player
+	 * @param pPlayer the player to message
+	 * @param string the string to send
+	 */
 	public void msg(Player pPlayer, String string) {
 		pPlayer.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 		db.i("to " + pPlayer.getName() + ": "+ string);
 	}
     
+	/**
+	 * send a message to a commandsender
+	 * @param sender the commandsender to message
+	 * @param string the string to send
+	 */
 	public void msg(CommandSender sender, String string) {
 		sender.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 	}
-
+	
+	/**
+	 * save the classrank map to the config
+	 */
 	public void save_config() {
 		db.i("saving config...");
 		for (net.slipcor.classranks.core.Class cClass : ClassManager.getClasses()) {
     		db.i(" - "+cClass.name);
 			for (Rank rRank : cClass.ranks) {
-				db.i("   - " + rRank.getPermissionName() + ": '" + rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode()));
+				db.i("   - " + rRank.getPermName() + ": '" + rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode()));
 
-				getConfig().set("classes." + cClass.name + "." + rRank.getPermissionName(), String.valueOf(rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode())));
+				getConfig().set("classes." + cClass.name + "." + rRank.getPermName(), String.valueOf(rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode())));
 			}
 		}
 		saveConfig();

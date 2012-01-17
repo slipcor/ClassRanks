@@ -2,14 +2,10 @@ package net.slipcor.classranks.core;
 
 import org.bukkit.ChatColor;
 
-/*
+/**
  * rank class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.2.0
  * 
  * @author slipcor
  */
@@ -20,6 +16,13 @@ public class Rank {
 	ChatColor cColor;
 	Class crcSuper;
 	
+	/**
+	 * create a rank instance
+	 * @param sPermName the permission name to use
+	 * @param sDispName the display name
+	 * @param cC the name ChatColor
+	 * @param crc the class to add to
+	 */
 	public Rank(String sPermName, String sDispName, ChatColor cC, Class crc) {
 		this.sPermissionName = sPermName;
 		this.sDisplayName = sDispName;
@@ -27,30 +30,50 @@ public class Rank {
 		this.crcSuper = crc;
 	}
 	
-	public String getPermName() {
-		return this.getPermissionName();
-	}
-	
+	/**
+	 * hand over display name
+	 * @return the display name
+	 */
 	public String getDispName() {
 		return this.sDisplayName;
 	}
 	
+	/**
+	 * hand over the color
+	 * @return the color
+	 */
 	public ChatColor getColor() {
 		return this.cColor;
 	}
 	
+	/**
+	 * hand over the class
+	 * @return the class
+	 */
 	public Class getSuperClass() {
 		return this.crcSuper;
 	}
-
-	public String getPermissionName() {
+	
+	/**
+	 * hand over the permission name
+	 * @return the permission name
+	 */
+	public String getPermName() {
 		return sPermissionName;
 	}
-
+	
+	/**
+	 * update the display name
+	 * @param sDisplayName the display to use
+	 */
 	public void setDispName(String sDisplayName) {
 		this.sDisplayName = sDisplayName;
 	}
-
+	
+	/**
+	 * update the color
+	 * @param cColor the color to use
+	 */
 	public void setColor(ChatColor cColor) {
 		this.cColor = cColor;
 	}

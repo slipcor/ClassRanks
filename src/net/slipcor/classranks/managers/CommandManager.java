@@ -13,17 +13,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-/*
+/**
  * command manager class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.1.6 - cleanup
- *     v0.1.5.2 - dbload correction, onlyoneclass activation
- *     v0.1.5.1 - cleanup
- *     v0.1.5.0 - more fixes, update to CB #1337
+ * @version 0.2.2
  * 
  * @author slipcor
  */
@@ -453,7 +446,10 @@ public class CommandManager {
 			}
 			
 			// /class [classname]
-			
+			if (!plugin.perms.hasPerms(pPlayer, "classranks.rank.self", pPlayer.getWorld().getName())) {
+				plugin.msg(pPlayer,"You don't have permission to choose your class!");
+				return true;
+			}
 
 			String sRankInfo = plugin.perms.getPermNameByPlayer(pPlayer.getWorld().getName(), pPlayer.getName());
 			

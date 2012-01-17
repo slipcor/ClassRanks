@@ -9,14 +9,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/*
+/**
  * classadmin command class
  * 
- * v0.2.1 - internal command restructuring
- * 
- * History:
- * 
- *     v0.2.1 - internal command restructuring
+ * @version v0.2.1
  * 
  * @author slipcor
  */
@@ -25,7 +21,12 @@ public class ClassAdminCommand implements CommandExecutor {
 	private final ClassRanks plugin;
 	private final CommandManager cmdMgr;
 	private final DebugManager db;
-
+	
+	/**
+	 * create a class admin command instance
+	 * @param cr the plugin instance to hand over
+	 * @param cm the command manager instance to hand over
+	 */
 	public ClassAdminCommand(ClassRanks cr, CommandManager cm) {
 		plugin = cr;
 		cmdMgr = cm;

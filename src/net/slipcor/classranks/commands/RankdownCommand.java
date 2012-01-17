@@ -10,14 +10,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-/*
+/**
  * rankdown command class
  * 
- * v0.2.1 - internal command restructuring
- * 
- * History:
- * 
- *     v0.2.1 - internal command restructuring
+ * @version v0.2.1
  * 
  * @author slipcor
  */
@@ -27,6 +23,11 @@ public class RankdownCommand implements CommandExecutor {
 	private final CommandManager cmdMgr;
 	private final DebugManager db;
 	
+	/**
+	 * create a rankdown command instance
+	 * @param cr the plugin instance to hand over
+	 * @param cm the command manager instance to hand over
+	 */
 	public RankdownCommand(ClassRanks cr, CommandManager cm) {
 		plugin = cr;
 		cmdMgr = cm;
