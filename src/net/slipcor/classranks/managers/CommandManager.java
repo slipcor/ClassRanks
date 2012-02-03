@@ -446,7 +446,7 @@ public class CommandManager {
 			}
 			
 			// /class [classname]
-			if (!plugin.perms.hasPerms(pPlayer, "classranks.rank.self", pPlayer.getWorld().getName())) {
+			if (!plugin.perms.hasPerms(pPlayer, "classranks.self.rank", pPlayer.getWorld().getName())) {
 				plugin.msg(pPlayer,"You don't have permission to choose your class!");
 				return true;
 			}

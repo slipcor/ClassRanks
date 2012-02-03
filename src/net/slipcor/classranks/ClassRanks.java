@@ -58,7 +58,6 @@ public class ClassRanks extends JavaPlugin {
         pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Normal, this);
         pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Normal, this);
-        
         @SuppressWarnings("unused")
 		ClassManager cm = new ClassManager(this);
 
