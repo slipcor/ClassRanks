@@ -111,10 +111,10 @@ public class ClassManager {
 		try {
 			cc = ChatColor.valueOf(result[1]);
 			if (cc == null) {
-				cc = ChatColor.getByCode(Integer.parseInt(result[1].substring(1),16));
+				cc = ChatColor.getByChar(result[1].substring(1));
 			}
 		} catch (Exception e){
-			cc = ChatColor.getByCode(Integer.parseInt(result[1].substring(1),16));
+			cc = ChatColor.getByChar(result[1].substring(1));
 		}
 
 		db.i(" - cc = " + String.valueOf(cc));

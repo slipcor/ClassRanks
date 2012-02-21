@@ -3,15 +3,13 @@ package net.slipcor.classranks;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -40,24 +38,19 @@ import net.slipcor.classranks.register.payment.Method;
 
 public class ClassRanks extends JavaPlugin {
     private final CommandManager cmdMgr = new CommandManager(this);
-    private final CRPlayerListener playerListener = new CRPlayerListener(this, cmdMgr);
-    private final CRServerListener serverListener = new CRServerListener(this);
+    private final CRServerListener serverListener = new CRServerListener(this, cmdMgr);
 	private final DebugManager db = new DebugManager(this);
 	public boolean trackRanks = false;
     
-    private Logger Logger; // Logfile access
     public Method method = null; // eConomy access
     public CRPermissionHandler perms; // Permissions access
     
     @Override
-	public void onEnable(){    	
-        Logger = java.util.logging.Logger.getLogger("Minecraft");
-		//com.arandomappdev.bukkitstats.CallHome.load(this);
+	public void onEnable() {
 
         PluginManager pm = getServer().getPluginManager();
-        pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLUGIN_ENABLE, serverListener, Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLUGIN_DISABLE, serverListener, Priority.Normal, this);
+        pm.registerEvents(serverListener, this);
+        
         @SuppressWarnings("unused")
 		ClassManager cm = new ClassManager(this);
 
@@ -81,11 +74,16 @@ public class ClassRanks extends JavaPlugin {
         
         this.perms.setupPermissions();
         
+        Tracker tracker = new Tracker(this);
+        tracker.start();
+		Update.updateCheck(this);
+        
         log("v" + this.getDescription().getVersion() + " enabled", Level.INFO);
     }
     
     @Override
 	public void onDisable() {
+    	Tracker.stop();
         log("disabled", Level.INFO);
     }
     
@@ -93,9 +91,14 @@ public class ClassRanks extends JavaPlugin {
      * (re)load the config
      */
 	public void load_config() {
-		if (getConfig() == null || getConfig().get("debug") == null)
-			getConfig().options().copyDefaults(true);
+		String debugVersion = "0225";
 		
+		if (getConfig() == null || !getConfig().getString("cversion").equals(debugVersion)) {
+			log("creating default config.yml", Level.INFO);
+			getConfig().set("cversion", debugVersion);
+			getConfig().options().copyDefaults(true);
+			saveConfig();
+		}
         DebugManager.active = getConfig().getBoolean("debug",false);
         
         if (getConfig().getBoolean("checkprices") && getConfig().getConfigurationSection("prices") != null) {
@@ -235,7 +238,7 @@ public class ClassRanks extends JavaPlugin {
 	 * @param level the logging level
 	 */
 	public void log(String message, Level level){
-        Logger.log(level,"[ClassRanks] " + message);
+        Bukkit.getLogger().log(level,"[ClassRanks] " + message);
     }
 	
 	/**
@@ -247,7 +250,7 @@ public class ClassRanks extends JavaPlugin {
 		pPlayer.sendMessage("[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE + "] " + string);
 		db.i("to " + pPlayer.getName() + ": "+ string);
 	}
-    
+
 	/**
 	 * send a message to a commandsender
 	 * @param sender the commandsender to message
@@ -265,9 +268,9 @@ public class ClassRanks extends JavaPlugin {
 		for (net.slipcor.classranks.core.Class cClass : ClassManager.getClasses()) {
     		db.i(" - "+cClass.name);
 			for (Rank rRank : cClass.ranks) {
-				db.i("   - " + rRank.getPermName() + ": '" + rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode()));
+				db.i("   - " + rRank.getPermName() + ": '" + rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().ordinal()));
 
-				getConfig().set("classes." + cClass.name + "." + rRank.getPermName(), String.valueOf(rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().getCode())));
+				getConfig().set("classes." + cClass.name + "." + rRank.getPermName(), String.valueOf(rRank.getDispName() + ":&" + Integer.toHexString(rRank.getColor().ordinal())));
 			}
 		}
 		saveConfig();

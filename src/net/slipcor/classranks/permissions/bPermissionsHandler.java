@@ -12,9 +12,9 @@ import net.slipcor.classranks.managers.PlayerManager;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import de.bananaco.permissions.Permissions;
-import de.bananaco.permissions.interfaces.PermissionSet;
-import de.bananaco.permissions.worlds.WorldPermissionsManager;
+import de.bananaco.bpermissions.api.ApiLayer;
+import de.bananaco.bpermissions.api.WorldManager;
+import de.bananaco.bpermissions.api.util.CalculableType;
 
 /*
  * bPermissions handler class
@@ -30,7 +30,7 @@ import de.bananaco.permissions.worlds.WorldPermissionsManager;
 
 public class bPermissionsHandler extends CRPermissionHandler {
 	private final ClassRanks plugin;
-	private WorldPermissionsManager permissionHandler;
+	private WorldManager permissionHandler;
 	private final DebugManager db;
 	
 	public bPermissionsHandler(ClassRanks cr) {
@@ -40,12 +40,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
-		permName = permName.toLowerCase();
-		PermissionSet ps = permissionHandler.getPermissionSet(world);
-		List<String> list = ps.getGroups(player);
-
-		db.i("isInGroup: player " + player + ", world: " + world + ", perms: " + permName + ": " + String.valueOf(list.contains(permName)));
-		return (list.contains(permName));
+		return ApiLayer.hasGroupRecursive(world, CalculableType.USER, player, permName);
 	}
 	
 
@@ -55,19 +50,18 @@ public class bPermissionsHandler extends CRPermissionHandler {
 	@Override
     public boolean setupPermissions() {
     	// try to load permissions, return result
-    	
-        permissionHandler = Permissions.getWorldPermissionsManager();
-        if (permissionHandler == null){
+    	try {
+    		ApiLayer al = new ApiLayer();
+            plugin.log("<3 bPermissions", Level.INFO);
+    		return (al.toString() != null);
+    	} catch (Exception e) {
     		db.i("bPerms not found");
-            return false;            
-        }
-        plugin.log("<3 bPermissions", Level.INFO);
-    	return true;
+    		return false;
+    	}
     }
 
 	@Override
     public boolean hasPerms(Player comP, String string, String world) {
-		db.i("player hasPerms: " + comP.getName() + ", world: " + world + ", perm: "  + string + " : " + String.valueOf( permissionHandler.getPermissionSet(world).getPlayerNodes(comP).contains(string)));
 		return comP.hasPermission(string);
 	}
 
@@ -90,7 +84,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					permissionHandler.getPermissionSet(worlds[i]).addGroup(player, cString);
+					ApiLayer.addGroup(worlds[i], CalculableType.USER, player, cString);
 					db.i("added group " + cString + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + cString + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -117,7 +111,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					permissionHandler.getPermissionSet(worlds[i]).addGroup(player, rank);
+					ApiLayer.addGroup(worlds[i], CalculableType.USER, player, rank);
 					db.i("added rank " + rank + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + rank + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -144,7 +138,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					permissionHandler.getPermissionSet(worlds[i]).removeGroup(player, cString);
+					ApiLayer.removeGroup(worlds[i], CalculableType.USER, player, cString);
 					db.i("removed rank " + cString + " from player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + cString + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -169,8 +163,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 				}
 			}
 			for(int i=0;i<worlds.length;i++) {
-				PermissionSet ps = permissionHandler.getPermissionSet(worlds[i]);
-				List<String> list = ps.getGroups(player);
+				String[] list = ApiLayer.getGroups(worlds[i], CalculableType.USER, player);
 				for (String sRank : list)
 					if (ClassManager.rankExists(sRank))
 						permGroups.add(sRank);

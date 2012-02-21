@@ -98,6 +98,6 @@ public class FormatManager {
 		// remove the color prefix
 		cCode = cCode.replace("&", "");
 		// calculate the chat color via hex number
-		return ChatColor.getByCode(Integer.parseInt(cCode,16));
+		return ChatColor.getByChar(cCode);
 	}
 }

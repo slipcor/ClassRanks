@@ -159,11 +159,11 @@ public class CommandManager {
 		
 		if (rankOffset > 0) {
 			if (expCost != null && expCost.length > 0 && expCost[cRank+1] > 0) {
-				if (comP.getExperience() < expCost[cRank+1]) {
+				if (comP.getTotalExperience() < expCost[cRank+1]) {
 					plugin.msg(comP, "You don't have enough experience! You need "+expCost[cRank+1]);
 					return true;
 				}
-				comP.setExperience(comP.getExperience() - expCost[cRank+1]);
+				comP.setTotalExperience(comP.getTotalExperience() - expCost[cRank+1]);
 				plugin.msg(comP, "You paid " + expCost[cRank+1] + " experience points!");
 			}
 
@@ -485,7 +485,7 @@ public class CommandManager {
     		// Check if the player has got the money
             if (plugin.method != null) {
 				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
-            	if (!ma.hasEnough(moneyCost[rID])) {
+            	if (plugin.getConfig().getBoolean("checkprices") && !ma.hasEnough(moneyCost[rID])) {
             
 	                plugin.msg(pPlayer,"You don't have enough money to choose your class! (" + plugin.method.format(moneyCost[rID]) + ")");
 	                return true;
@@ -493,13 +493,12 @@ public class CommandManager {
             }
 			db.i("money check successful");
 			
-			
 			if (expCost != null && expCost.length > 0 && (expCost[rID] > 0)) {
-				if (pPlayer.getExperience() < expCost[rID]) {
+				if (pPlayer.getTotalExperience() < expCost[rID]) {
 					plugin.msg(pPlayer, "You don't have enough experience! You need "+expCost[rID]);
 					return true;
 				}
-				pPlayer.setExperience(pPlayer.getExperience() - expCost[rID]);
+				pPlayer.setTotalExperience(pPlayer.getTotalExperience() - expCost[rID]);
 				plugin.msg(pPlayer, "You paid " + expCost[rID] + " experience points!");
 			}
 			db.i("exp check successful");
@@ -526,7 +525,7 @@ public class CommandManager {
 				plugin.msg(pPlayer,"You have chosen your class! You now have the rank " + c_Color + cDispName);
 			}	
 			
-			if ((plugin.method != null) && (moneyCost[rID] > 0)) {
+			if (plugin.getConfig().getBoolean("checkprices") && (plugin.method != null) && (moneyCost[rID] > 0)) {
 				// if it costs anything at all
 
 				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
