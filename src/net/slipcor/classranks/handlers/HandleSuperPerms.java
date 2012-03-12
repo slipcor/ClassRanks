@@ -1,4 +1,4 @@
-package net.slipcor.classranks.permissions;
+package net.slipcor.classranks.handlers;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -10,23 +10,19 @@ import net.slipcor.classranks.ClassRanks;
 import net.slipcor.classranks.managers.ClassManager;
 import net.slipcor.classranks.managers.DebugManager;
 
-/*
+/**
  * SuperPermissions handler class
  * 
- * v0.2.1 - PEX fix, SuperPerms fix
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
 
-public class SuperPermissionsHandler extends CRPermissionHandler {
+public class HandleSuperPerms extends CRHandler {
 	private final ClassRanks plugin;
 	private final DebugManager db;
 	
-	public SuperPermissionsHandler(ClassRanks cr) {
+	public HandleSuperPerms(ClassRanks cr) {
 		plugin = cr;
 		db = new DebugManager(cr);
 	}

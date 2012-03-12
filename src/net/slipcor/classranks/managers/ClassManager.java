@@ -9,15 +9,12 @@ import net.slipcor.classranks.core.Rank;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
-/*
+/**
  * class manager class
  * 
- * v0.2.2 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
@@ -100,31 +97,6 @@ public class ClassManager {
 		return null;
 	}
 	
-	public static String[] validateDispNameColor(String sDispNameColor) {
-		db.i("validating display name + color");
-		if (!sDispNameColor.contains(":"))
-			return null;
-
-		db.i(" - string contains colon");
-		String[] result = sDispNameColor.split(":");
-		ChatColor cc = null;
-		try {
-			cc = ChatColor.valueOf(result[1]);
-			if (cc == null) {
-				cc = ChatColor.getByChar(result[1].substring(1));
-			}
-		} catch (Exception e){
-			cc = ChatColor.getByChar(result[1].substring(1));
-		}
-
-		db.i(" - cc = " + String.valueOf(cc));
-		if (cc == null) {
-			return null;
-		}
-		result[1] = cc.name();
-		return result;
-	}
-
 	public static boolean rankExists(String sRank) {
 		for (Class c : classes) {
 			for (Rank r : c.ranks) {
@@ -170,27 +142,19 @@ public class ClassManager {
 	}
 
 
-	public static boolean configClassAdd(String sClassName, String sPermName, String sDispNameColor, Player pPlayer) {
+	public static boolean configClassAdd(String sClassName, String sPermName, String sDispName, String sColor, ItemStack[] isItems, double dCost, int iExp, Player pPlayer) {
 		Class cClass = getClassbyClassName(sClassName);
 		if (cClass == null) {
-			String[] aDispNameColor = validateDispNameColor(sDispNameColor);
-			if (aDispNameColor != null) {
-				Class c = new Class(sClassName);
-				c.add(sPermName, aDispNameColor[0], ChatColor.valueOf(aDispNameColor[1]));
-				classes.add(c);
-				if (pPlayer == null)
-					db.i("Class added: " + sClassName);
-				else
-					plugin.msg(pPlayer, "Class added: " + sClassName);
-				plugin.save_config();
-				return true;
-			}
-			String[] s = sDispNameColor.split(":");
+			Class c = new Class(sClassName);
+			c.add(sPermName, sDispName, (FormatManager.formatColor(sColor)), isItems, dCost, iExp);
+			classes.add(c);
 			if (pPlayer == null)
-				db.i("Invalid color code: " + s[1]);
+				db.i("Class added: " + sClassName);
 			else
-				plugin.msg(pPlayer, "Invalid color code: " + s[1]);
+				plugin.msg(pPlayer, "Class added: " + sClassName);
+			plugin.save_config();
 			return true;
+			
 		}
 		if (pPlayer == null)
 			db.i("Class already exists: " + sClassName);
@@ -199,24 +163,15 @@ public class ClassManager {
 		return true;
 	}
 
-	public static boolean configRankAdd(String sClassName, String sPermName, String sDispNameColor, Player pPlayer) {
+	public static boolean configRankAdd(String sClassName, String sPermName, String sDispName, String sColor, ItemStack[] isItems, double dCost, int iExp, Player pPlayer) {
 		Class cClass = getClassbyClassName(sClassName);
 		if (cClass != null) {
-			String[] aDispNameColor = validateDispNameColor(sDispNameColor);
-			if (aDispNameColor != null) {
-				cClass.ranks.add(new Rank(sPermName, aDispNameColor[0], ChatColor.valueOf(aDispNameColor[1]), cClass));
-				if (pPlayer == null)
-					db.i("Rank added: " + ChatColor.valueOf(aDispNameColor[1]) + sPermName);
-				else
-					plugin.msg(pPlayer, "Rank added: " + ChatColor.valueOf(aDispNameColor[1]) + sPermName);
-				plugin.save_config();
-				return true;
-			}
-			String[] s = sDispNameColor.split(":");
+			cClass.ranks.add(new Rank(sPermName, sDispName, (FormatManager.formatColor(sColor)), cClass, isItems, dCost, iExp));
 			if (pPlayer == null)
-				db.i("Invalid color code: " + s[1]);
+				db.i("Rank added: " + (FormatManager.formatColor(sColor)) + sPermName);
 			else
-				plugin.msg(pPlayer, "Invalid color code: " + s[1]);
+				plugin.msg(pPlayer, "Rank added: " + (FormatManager.formatColor(sColor)) + sPermName);
+			plugin.save_config();
 			return true;
 		}
 		if (pPlayer == null)
@@ -238,21 +193,15 @@ public class ClassManager {
 		return true;
 	}
 
-	public static boolean configRankChange(String sClassName, String sPermName, String sDispNameColor, Player pPlayer) {
+	public static boolean configRankChange(String sClassName, String sPermName, String sDispName, String sColor, Player pPlayer) {
 		Class cClass = getClassbyClassName(sClassName);
 		if (cClass != null) {
 			Rank rank = getRankByPermName(sPermName);
 			if (rank != null) {
-				String[] aDispNameColor = validateDispNameColor(sDispNameColor);
-				if (aDispNameColor != null) {
-					rank.setDispName(aDispNameColor[0]);
-					rank.setColor(ChatColor.valueOf(aDispNameColor[1]));
-					plugin.msg(pPlayer, "Rank updated: " + ChatColor.valueOf(aDispNameColor[1]) + sPermName);
-					plugin.save_config();
-					return true;
-				}
-				String[] s = sDispNameColor.split(":");
-				plugin.msg(pPlayer, "Invalid color code: " + s[1]);
+				rank.setDispName(sDispName);
+				rank.setColor((FormatManager.formatColor(sColor)));
+				plugin.msg(pPlayer, "Rank updated: " + (FormatManager.formatColor(sColor)) + sPermName);
+				plugin.save_config();
 				return true;
 			}
 			plugin.msg(pPlayer, "Rank not found: " + sPermName);

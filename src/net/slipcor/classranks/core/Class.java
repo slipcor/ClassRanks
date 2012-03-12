@@ -3,11 +3,12 @@ package net.slipcor.classranks.core;
 import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * class class
  * 
- * @version v0.2.0
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
@@ -29,9 +30,12 @@ public class Class {
 	 * @param sPermName the rank permissions name
 	 * @param sDispName the rank display name
 	 * @param cColor the rank color
+	 * @param isItems the rank items cost
+	 * @param dCost the rank cost
+	 * @param iExp the rank exp cost
 	 */
-	public void add(String sPermName, String sDispName, ChatColor cColor) {
-		this.ranks.add(new Rank(sPermName, sDispName, cColor, this));
+	public void add(String sPermName, String sDispName, ChatColor cColor, ItemStack[] isItems, double dCost, int iExp) {
+		this.ranks.add(new Rank(sPermName, sDispName, cColor, this, isItems, dCost, iExp));
 	}
 	
 	/**

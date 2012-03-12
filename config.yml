@@ -21,6 +21,38 @@ checkexp: true
 playercolor: '&e'
 worldcolor: '&6'
 
+classes:
+    Fighter:
+        Warrior:
+            name: 'Warrior I'
+            color: '&7'
+            price: 10.00
+        SWarrior:
+            name: 'Warrior II'
+            color: '&7'
+            price: 50.00
+        MWarrior:
+            name: 'Warrior III'
+            color: '&8'
+            price: 100.00
+    Business:
+        Trader:
+            name: 'Trader I'
+            color: '&a'
+            price: 10.00
+        STrader:
+            name: 'Trader II'
+            color: '&a'
+            price: 50.00
+            items:
+            - 'GOLD_INGOT:3'
+            - 'IRON_INGOT:3'
+        MTrader:
+            name: 'Trader III'
+            color: '&2'
+            price: 100.00
+
+
 #---------------------#
 # Money Cost Settings #
 #---------------------#
@@ -52,20 +84,6 @@ exp:
     III: '100'
 
 #---------#
-# Classes #
-#---------#
-
-classes:
-    Fighter:
-        Warrior: 'Warrior I:&7'
-        SWarrior: 'Warrior II:&7'
-        MWarrior: 'Warrior III:&8'
-    Business:
-        Trader: 'Trader I:&a'
-        STrader: 'Trader II:&a'
-        MTrader: 'Trader III:&2'
-
-#---------#
 # Players #
 #---------#
 
@@ -76,4 +94,4 @@ players:
 #------------------#
 # Config debugging #
 #------------------#
-cversion: '0200'
+cversion: '0300'

@@ -1,8 +1,9 @@
-
 CHANGELOG
 
-v0.2
+v0.3
+    v0.3.0 - another big rewrite to activate exp/cost/items setting for each rank
 
+v0.2
     v0.2.1 - internal command restructuring (no visible changes)
     v0.2.0 - mayor rewrite, SQL database dropped, multiPermissions, debug mode 
 

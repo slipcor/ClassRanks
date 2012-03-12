@@ -1,4 +1,4 @@
-package net.slipcor.classranks.permissions;
+package net.slipcor.classranks.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,71 +12,61 @@ import net.slipcor.classranks.managers.PlayerManager;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import de.bananaco.bpermissions.api.ApiLayer;
-import de.bananaco.bpermissions.api.WorldManager;
-import de.bananaco.bpermissions.api.util.CalculableType;
+import ru.tehkode.permissions.PermissionManager;
 
-/*
- * bPermissions handler class
+/**
+ * PermissionsEX handler class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
 
-public class bPermissionsHandler extends CRPermissionHandler {
+public class HandlePEX extends CRHandler {
 	private final ClassRanks plugin;
-	private WorldManager permissionHandler;
+	private PermissionManager permissionHandler;
 	private final DebugManager db;
 	
-	public bPermissionsHandler(ClassRanks cr) {
+	public HandlePEX(ClassRanks cr) {
 		plugin = cr;
 		db = new DebugManager(cr);
 	}
 
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
-		return ApiLayer.hasGroupRecursive(world, CalculableType.USER, player, permName);
-	}
-	
+		db.i("isInGroup: player " + player + ", world: " + world + ", perms: " + permName + ": " + String.valueOf(permissionHandler.getUser(player).inGroup(permName)));
 
-    /*
-     * Function that tries to setup the permissions system, returns result
-     */
-	@Override
-    public boolean setupPermissions() {
-    	// try to load permissions, return result
-    	try {
-    		ApiLayer al = new ApiLayer();
-            plugin.log("<3 bPermissions", Level.INFO);
-    		return (al.toString() != null);
-    	} catch (Exception e) {
-    		db.i("bPerms not found");
-    		return false;
-    	}
-    }
-
-	@Override
-    public boolean hasPerms(Player comP, String string, String world) {
-		return comP.hasPermission(string);
+		return permissionHandler.getUser(player).inGroup(permName);
 	}
 
-    
-	/*
-     * Add a user to a given class in the given world
-     */
+	@Override
+	public boolean setupPermissions() {
+		// try to fetch the PEX handler, return result
+	    
+	     permissionHandler = ru.tehkode.permissions.bukkit.PermissionsEx.getPermissionManager();
+	        if (permissionHandler == null) {
+	    		db.i("PEX not found");
+	            return false;
+	        }
+	     plugin.log("<3 PEX", Level.INFO); // success!
+	     return true;
+	}
+
+	@Override
+	public boolean hasPerms(Player comP, String string, String world) {
+		db.i("player hasPerms: " + comP.getName() + ", world: " + world + ", perm: "  + string + " : " + String.valueOf(comP.hasPermission(string)?true:permissionHandler.has(comP.getName(), string, world)));
+		return comP.hasPermission(string)?true:permissionHandler.has(comP.getName(), string, world);
+	}
+
 	@Override
 	public void classAdd(String world, String player, String cString) {
+		db.i("");
 		player = PlayerManager.search(player); // auto-complete playername
 		if (permissionHandler != null) {
 			String[] worlds = {world};
 			if (world.equalsIgnoreCase("all")) {
 				List<World> lWorlds = plugin.getServer().getWorlds();
-				
+		
 				worlds = new String[lWorlds.size()];
 				for(int i=0;i<lWorlds.size();i++) {
 					worlds[i] = lWorlds.get(i).getName();
@@ -84,7 +74,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					ApiLayer.addGroup(worlds[i], CalculableType.USER, player, cString);
+					permissionHandler.getUser(player).addGroup(cString, worlds[i]);
 					db.i("added group " + cString + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + cString + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -93,9 +83,6 @@ public class bPermissionsHandler extends CRPermissionHandler {
 		}
 	}
 
-    /*
-     * Add a user to a given rank in the given world
-     */
 	@Override
 	public void rankAdd(String world, String player, String rank) {
 		player = PlayerManager.search(player); // auto-complete playername
@@ -111,7 +98,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					ApiLayer.addGroup(worlds[i], CalculableType.USER, player, rank);
+					permissionHandler.getUser(player).addGroup(rank, worlds[i]);
 					db.i("added rank " + rank + " to player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + rank + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -120,9 +107,6 @@ public class bPermissionsHandler extends CRPermissionHandler {
 		}
 	}
 
-	/*
-	 * Remove a user from the class he has in the given world
-	 */
 	@Override
 	public void rankRemove(String world, String player, String cString) {
 		player = PlayerManager.search(player); // auto-complete playername
@@ -138,7 +122,7 @@ public class bPermissionsHandler extends CRPermissionHandler {
 			}
 			for(int i=0;i<worlds.length;i++) {
 				try {
-					ApiLayer.removeGroup(worlds[i], CalculableType.USER, player, cString);
+					permissionHandler.getUser(player).removeGroup(cString, worlds[i]);
 					db.i("removed rank " + cString + " from player " + player + " in world " + worlds[i]);
 				} catch (Exception e) {
 					plugin.log("PermName " + cString + " or user " + player + " not found in world " + worlds[i], Level.WARNING);
@@ -149,9 +133,8 @@ public class bPermissionsHandler extends CRPermissionHandler {
 
 	@Override
 	public String getPermNameByPlayer(String world, String player) {
-		player = PlayerManager.search(player); // auto-complete playername
 		ArrayList<String> permGroups = new ArrayList<String>();
-		
+		player = PlayerManager.search(player); // auto-complete playername
 		if (permissionHandler != null) {
 			String[] worlds = {world};
 			if (world.equalsIgnoreCase("all")) {
@@ -163,14 +146,14 @@ public class bPermissionsHandler extends CRPermissionHandler {
 				}
 			}
 			for(int i=0;i<worlds.length;i++) {
-				String[] list = ApiLayer.getGroups(worlds[i], CalculableType.USER, player);
-				for (String sRank : list)
-					if (ClassManager.rankExists(sRank))
-						permGroups.add(sRank);
+				String[] groups = permissionHandler.getUser(player).getGroupsNames(worlds[i]);
+				
+				for (String group : groups)
+					permGroups.add(group);
 
 			}
 		}
-
+		
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
 	}

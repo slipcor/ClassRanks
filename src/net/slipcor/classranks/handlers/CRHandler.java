@@ -1,20 +1,16 @@
-package net.slipcor.classranks.permissions;
+package net.slipcor.classranks.handlers;
 
 import org.bukkit.entity.Player;
 
-/*
+/**
  * Permissions handler class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
 
-public abstract class CRPermissionHandler {
+public abstract class CRHandler {
 	public abstract boolean isInGroup(String world, String permName, String player);
 	public abstract boolean setupPermissions();
 	public abstract boolean hasPerms(Player comP, String string, String world);

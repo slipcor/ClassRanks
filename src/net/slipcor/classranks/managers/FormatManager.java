@@ -1,16 +1,16 @@
 package net.slipcor.classranks.managers;
 
+import java.util.List;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-/*
+/**
  * String formating class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
- * 
- * History:
- * 
- *     v0.1.6 - cleanup
+ * @version v0.3.0 
  * 
  * @author slipcor
  */
@@ -47,7 +47,7 @@ public class FormatManager {
 	String formatStringByColorCode(String str, String code) {
 		// remove the color prefix
 		code = code.replace("&", "");
-		ChatColor cc = cColorbyAmpedCode(code);
+		ChatColor cc = formatColor(code);
 		// return colored string
 		return cc + str + ChatColor.WHITE;
 	}
@@ -83,18 +83,81 @@ public class FormatManager {
 		return result;
 	}
     
+	public static ItemStack[] getItemStacksFromStringList(List<String> stringList) {
+		String result = "";
+		for (String item : stringList) {
+			result += result.equals("")?item:","+item;
+		}
+		return getItemStacksFromCommaString(result);
+	}
+
+	public static ItemStack[] getItemStacksFromCommaString (String string) {
+		String[] arrStacks = string.split(",");
+		ItemStack[] result = new ItemStack[arrStacks.length];
+		int i = 0;
+		for (String stack : arrStacks) {
+			if (stack.contains(":")) {
+				String[] vars = stack.split(":");
+				if (vars.length == 2) {
+					int iAmount = 1;
+					try {
+						iAmount = Integer.parseInt(vars[1]);
+					} catch (Exception e) {
+						Bukkit.getLogger().warning("unrecognized amount: "+vars[1]);
+					}
+					// ITEM:COUNT
+					try {
+						int iType = Integer.parseInt(stack);
+						result[i++] = new ItemStack(iType, iAmount);
+					} catch (Exception e) {
+						result[i++] = new ItemStack(Material.valueOf(vars[0]), iAmount);
+					}
+				} else {
+					// ITEM:DATA:COUNT
+
+					int iAmount = 1;
+					try {
+						iAmount = Integer.parseInt(vars[2]);
+					} catch (Exception e) {
+						Bukkit.getLogger().warning("unrecognized amount: "+vars[2]);
+					}
+					short sDamage = 0;
+					try {
+						sDamage = Short.parseShort(vars[1]);
+					} catch (Exception e) {
+						Bukkit.getLogger().warning("unrecognized damage: "+vars[1]);
+					}
+					try {
+						int iType = Integer.parseInt(stack);
+						result[i++] = new ItemStack(iType, iAmount, sDamage);
+					} catch (Exception e) {
+						result[i++] = new ItemStack(Material.valueOf(vars[0]), iAmount, sDamage);
+					}
+				}
+			} else {
+				try {
+					int iType = Integer.parseInt(stack);
+					result[i++] = new ItemStack(iType, 1);
+				} catch (Exception e) {
+					result[i++] = new ItemStack(Material.valueOf(stack),1);
+				}
+			}
+		}
+		return result;
+	}
+    
     /*
      * store the config colors into our private values
      */
 	public void setColors(String sColor, String sPlayerCode, String sWorldCode) {
-		colPlayer = cColorbyAmpedCode(sPlayerCode);
-		colWorld = cColorbyAmpedCode(sWorldCode);
+		colPlayer = formatColor(sPlayerCode);
+		colWorld = formatColor(sWorldCode);
 	}
 	
 	/*
 	 * Get a Chatcolor by colorcode (e.g. '&a')
 	 */
-	private ChatColor cColorbyAmpedCode(String cCode) {
+	public static ChatColor formatColor(String cCode) {
 		// remove the color prefix
 		cCode = cCode.replace("&", "");
 		// calculate the chat color via hex number
