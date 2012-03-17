@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * command manager class
  * 
- * @version v0.3.0 
+ * @version v0.4.0
  * 
  * @author slipcor
  */
@@ -152,7 +152,20 @@ public class CommandManager {
 					}
 				}
 
-				if (plugin.method != null) {
+				if (ClassRanks.economy != null) {
+					
+					if (ClassRanks.economy.hasAccount(comP.getName())) {
+						plugin.log("Account not found: " + comP.getName(),
+								Level.SEVERE);
+						return true;
+					}
+					if (!ClassRanks.economy.has(comP.getName(), rank_cost)) {
+						// no money, no ranking!
+						plugin.msg(comP,
+								"You don't have enough money to rank up!");
+						return true;
+					}
+				} else if (plugin.method != null) {
 					MethodAccount ma = plugin.method.getAccount(comP.getName());
 					if (ma == null) {
 						plugin.log("Account not found: " + comP.getName(),
@@ -243,16 +256,25 @@ public class CommandManager {
 		db.i("adding new rank...");
 		plugin.perms.rankAdd(World, changePlayer, cPermName);
 
-		if ((plugin.method != null) && (rank_cost > 0)) {
+		if ((rank_cost > 0)) {
 			// take the money, inform the player
 
-			MethodAccount ma = plugin.method.getAccount(comP.getName());
-			ma.subtract(rank_cost);
-			comP.sendMessage(ChatColor.DARK_GREEN + "[" + ChatColor.WHITE
-					+ "Money" + ChatColor.DARK_GREEN + "] " + ChatColor.RED
-					+ "Your account had " + ChatColor.WHITE
-					+ plugin.method.format(rank_cost) + ChatColor.RED
-					+ " debited.");
+			if (ClassRanks.economy != null) {
+				ClassRanks.economy.withdrawPlayer(comP.getName(), rank_cost);
+				comP.sendMessage(ChatColor.DARK_GREEN + "[" + ChatColor.WHITE
+						+ "Money" + ChatColor.DARK_GREEN + "] " + ChatColor.RED
+						+ "Your account had " + ChatColor.WHITE
+						+ ClassRanks.economy.format(rank_cost) + ChatColor.RED
+						+ " debited.");
+			} else if (plugin.method != null) {
+				MethodAccount ma = plugin.method.getAccount(comP.getName());
+				ma.subtract(rank_cost);
+				comP.sendMessage(ChatColor.DARK_GREEN + "[" + ChatColor.WHITE
+						+ "Money" + ChatColor.DARK_GREEN + "] " + ChatColor.RED
+						+ "Your account had " + ChatColor.WHITE
+						+ plugin.method.format(rank_cost) + ChatColor.RED
+						+ " debited.");
+			}
 		}
 
 		if (self && !rankpublic) {
@@ -263,7 +285,7 @@ public class CommandManager {
 							+ "!");
 		} else {
 			plugin.getServer().broadcastMessage(
-					"[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE
+					"[" + ChatColor.AQUA + plugin.getConfig().getString("prefix") + ChatColor.WHITE
 							+ "] Player " + fm.formatPlayer(changePlayer)
 							+ " now is a " + c_Color + cDispName
 							+ ChatColor.WHITE + " in " + fm.formatWorld(World)
@@ -424,7 +446,7 @@ public class CommandManager {
 							try {
 								if (chP.isOnline()) {
 									chP.sendMessage("[" + ChatColor.AQUA
-											+ "ClassRanks" + ChatColor.WHITE
+											+ plugin.getConfig().getString("prefix") + ChatColor.WHITE
 											+ "] You were removed from rank "
 											+ c_Color + cDispName
 											+ ChatColor.WHITE + " in "
@@ -497,7 +519,7 @@ public class CommandManager {
 
 			if ((rankpublic) || (!pPlayer.getName().equalsIgnoreCase(args[1]))) {
 				plugin.getServer().broadcastMessage(
-						"[" + ChatColor.AQUA + "ClassRanks" + ChatColor.WHITE
+						"[" + ChatColor.AQUA + plugin.getConfig().getString("prefix") + ChatColor.WHITE
 								+ "] " + fm.formatPlayer(args[1])
 								+ " now is a " + c_Color + cDispName);
 				return true;
@@ -632,7 +654,17 @@ public class CommandManager {
 				rank_cost = rank.getCost();
 			}
 			// Check if the player has got the money
-			if (plugin.method != null) {
+			if (ClassRanks.economy != null) {
+				if (plugin.getConfig().getBoolean("checkprices")
+						&& ClassRanks.economy.has(pPlayer.getName(), rank_cost)) {
+
+					plugin.msg(pPlayer,
+							"You don't have enough money to choose your class! ("
+									+ ClassRanks.economy.format(rank_cost)
+									+ ")");
+					return true;
+				}
+			} else if (plugin.method != null) {
 				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
 				if (plugin.getConfig().getBoolean("checkprices")
 						&& !ma.hasEnough(rank_cost)) {
@@ -720,17 +752,27 @@ public class CommandManager {
 			}
 
 			if (plugin.getConfig().getBoolean("checkprices")
-					&& (plugin.method != null) && (rank_cost > 0)) {
+					&& (rank_cost > 0)) {
 				// if it costs anything at all
 
-				MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
-				ma.subtract(rank_cost);
-				pPlayer.sendMessage(ChatColor.DARK_GREEN + "["
-						+ ChatColor.WHITE + "Money" + ChatColor.DARK_GREEN
-						+ "] " + ChatColor.RED + "Your account had "
-						+ ChatColor.WHITE
-						+ plugin.method.format(rank_cost) + ChatColor.RED
-						+ " debited.");
+				if (ClassRanks.economy != null) {
+					ClassRanks.economy.withdrawPlayer(pPlayer.getName(), rank_cost);
+					pPlayer.sendMessage(ChatColor.DARK_GREEN + "["
+							+ ChatColor.WHITE + "Money" + ChatColor.DARK_GREEN
+							+ "] " + ChatColor.RED + "Your account had "
+							+ ChatColor.WHITE
+							+ ClassRanks.economy.format(rank_cost) + ChatColor.RED
+							+ " debited.");
+				} else if ((plugin.method != null)) {
+					MethodAccount ma = plugin.method.getAccount(pPlayer.getName());
+					ma.subtract(rank_cost);
+					pPlayer.sendMessage(ChatColor.DARK_GREEN + "["
+							+ ChatColor.WHITE + "Money" + ChatColor.DARK_GREEN
+							+ "] " + ChatColor.RED + "Your account had "
+							+ ChatColor.WHITE
+							+ plugin.method.format(rank_cost) + ChatColor.RED
+							+ " debited.");
+				}
 			}
 			return true;
 		}

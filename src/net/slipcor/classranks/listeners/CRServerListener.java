@@ -26,7 +26,7 @@ import org.bukkit.event.server.PluginEnableEvent;
  * 
  * -
  * 
- * @version v0.2.2
+ * @version v0.4.0
  * 
  * @author slipcor
  */
@@ -101,6 +101,9 @@ public class CRServerListener implements Listener {
 
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
+    	if (ClassRanks.economy != null) {
+    		return;
+    	}
         // Check to see if the plugin thats being disabled is the one we are using
         if (this.methods != null && Methods.hasMethod()) {
             Boolean check = Methods.checkDisabled(event.getPlugin());
@@ -114,6 +117,9 @@ public class CRServerListener implements Listener {
 
 	@EventHandler
     public void onPluginEnable(PluginEnableEvent event) {
+    	if (ClassRanks.economy != null) {
+    		return;
+    	}
         // Check to see if we need a payment method
         if (!Methods.hasMethod()) {
             if(Methods.setMethod(Bukkit.getServer().getPluginManager())) {

@@ -1,9 +1,9 @@
 name: ClassRanks
 main: net.slipcor.classranks.ClassRanks
-version: 0.3.0.6
+version: 0.4.0.1
 author: slipcor
 website: http://dev.bukkit.org/server-mods/classranks/
-soft-depends: [bPermissions,iConomy,BOSEconomy,MultiCurrency,Essentials,PermissionsEx]
+soft-depends: [bPermissions,iConomy,BOSEconomy,MultiCurrency,Essentials,PermissionsEx,Vault]
 commands:
     class:
         description: Lets users choose a class / change classes

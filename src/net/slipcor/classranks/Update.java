@@ -138,17 +138,17 @@ public class Update {
 		if (player == null || !(player instanceof Player)) {
 			if (!msg) {
 				Bukkit.getLogger().info(
-						"[PVP Arena] You are on latest version!");
+						"[ClassRanks] You are on latest version!");
 			} else {
 				if (outdated) {
 					Bukkit.getLogger().warning(
-							"[PVP Arena] You are using v" + vThis
+							"[ClassRanks] You are using v" + vThis
 									+ ", an outdated version! Latest: "
 									+ vOnline);
 				} else {
 					Bukkit.getLogger()
 							.warning(
-									"[PVP Arena] You are using v"
+									"[ClassRanks] You are using v"
 											+ vThis
 											+ ", an experimental version! Latest stable: "
 											+ vOnline);

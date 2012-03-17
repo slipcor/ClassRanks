@@ -12,8 +12,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.milkbowl.vault.economy.Economy;
 import net.slipcor.classranks.commands.ClassAdminCommand;
 import net.slipcor.classranks.commands.ClassCommand;
 import net.slipcor.classranks.commands.RankdownCommand;
@@ -31,7 +33,7 @@ import net.slipcor.classranks.register.payment.Method;
 /**
  * main plugin class
  * 
- * @version v0.3.0
+ * @version v0.3.1
  * 
  * @author slipcor
  */
@@ -44,6 +46,7 @@ public class ClassRanks extends JavaPlugin {
 	public boolean trackRanks = false;
 
 	public Method method = null; // eConomy access
+    public static Economy economy = null;
 	public CRHandler perms; // Permissions access
 
 	@Override
@@ -63,18 +66,27 @@ public class ClassRanks extends JavaPlugin {
 
 		load_config(); // load the config file
 
-		if (pm.getPlugin("bPermissions") != null) {
-			db.i("bPermissions found!");
-			this.perms = new HandleBPerms(this);
-		} else if (pm.getPlugin("PermissionsEx") != null) {
-			db.i("PermissionsEX found!");
-			this.perms = new HandlePEX(this);
-		} else {
-			db.i("No perms found, defaulting to SuperPermissions!");
-			this.perms = new HandleSuperPerms(this);
+		if (pm.getPlugin("Vault") != null) {
+			db.i("Vault found!");
+			this.perms = new HandleVaultPerms(this);
+			setupEconomy();
+		}
+		
+		if (this.perms == null || (this.perms != null && !this.perms.setupPermissions())) {
+		
+			if (pm.getPlugin("bPermissions") != null) {
+				db.i("bPermissions found!");
+				this.perms = new HandleBPerms(this);
+			} else if (pm.getPlugin("PermissionsEx") != null) {
+				db.i("PermissionsEX found!");
+				this.perms = new HandlePEX(this);
+			} else {
+				db.i("No perms found, defaulting to SuperPermissions!");
+				this.perms = new HandleSuperPerms(this);
+			}
+			this.perms.setupPermissions();
 		}
 
-		this.perms.setupPermissions();
 
 		Tracker tracker = new Tracker(this);
 		tracker.start();
@@ -93,7 +105,7 @@ public class ClassRanks extends JavaPlugin {
 	 * (re)load the config
 	 */
 	public void load_config() {
-		String debugVersion = "0225";
+		String debugVersion = "0310";
 
 		if (getConfig() == null
 				|| !getConfig().getString("cversion").equals(debugVersion)) {
@@ -252,9 +264,9 @@ public class ClassRanks extends JavaPlugin {
 				}
 				if (getConfig().get(
 						"classes." + sClassName + "." + sRankName + ".price") != null) {
-					rankCost = getConfig().getDouble(
+					rankCost = Double.valueOf(getConfig().getString(
 							"classes." + sClassName + "." + sRankName
-									+ ".price");
+									+ ".price"));
 				}
 				if (getConfig().get(
 						"classes." + sClassName + "." + sRankName + ".items") != null) {
@@ -266,8 +278,8 @@ public class ClassRanks extends JavaPlugin {
 				}
 				if (getConfig().get(
 						"classes." + sClassName + "." + sRankName + ".exp") != null) {
-					rankExp = getConfig().getInt(
-							"classes." + sClassName + "." + sRankName + ".exp");
+					rankExp = Integer.parseInt(getConfig().getString(
+							"classes." + sClassName + "." + sRankName + ".exp"));
 				}
 
 				if (newClass) {
@@ -308,7 +320,7 @@ public class ClassRanks extends JavaPlugin {
 	 *            the string to send
 	 */
 	public void msg(Player pPlayer, String string) {
-		pPlayer.sendMessage("[" + ChatColor.AQUA + "ClassRanks"
+		pPlayer.sendMessage("[" + ChatColor.AQUA + getConfig().getString("prefix")
 				+ ChatColor.WHITE + "] " + string);
 		db.i("to " + pPlayer.getName() + ": " + string);
 	}
@@ -322,7 +334,7 @@ public class ClassRanks extends JavaPlugin {
 	 *            the string to send
 	 */
 	public void msg(CommandSender sender, String string) {
-		sender.sendMessage("[" + ChatColor.AQUA + "ClassRanks"
+		sender.sendMessage("[" + ChatColor.AQUA + getConfig().getString("prefix")
 				+ ChatColor.WHITE + "] " + string);
 	}
 
@@ -370,4 +382,14 @@ public class ClassRanks extends JavaPlugin {
 		}
 		saveConfig();
 	}
+    
+    private boolean setupEconomy()
+    {
+        RegisteredServiceProvider<Economy> economyProvider = Bukkit.getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
+    }
 }

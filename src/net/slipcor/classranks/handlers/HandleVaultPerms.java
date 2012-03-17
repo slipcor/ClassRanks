@@ -3,79 +3,68 @@ package net.slipcor.classranks.handlers;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
+import net.milkbowl.vault.permission.Permission;
 import net.slipcor.classranks.ClassRanks;
 import net.slipcor.classranks.managers.ClassManager;
 import net.slipcor.classranks.managers.DebugManager;
 import net.slipcor.classranks.managers.PlayerManager;
 
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-
-import ru.tehkode.permissions.PermissionManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 
 /**
- * PermissionsEX handler class
+ * Vault permissions handler class
  * 
- * @version v0.3.2
+ * @version v0.3.2 
  * 
  * @author slipcor
  */
 
-public class HandlePEX extends CRHandler {
+public class HandleVaultPerms extends CRHandler {
 	private final ClassRanks plugin;
-	private PermissionManager permissionHandler;
 	private final DebugManager db;
+	public static Permission permission = null;
 
-	public HandlePEX(ClassRanks cr) {
+	public HandleVaultPerms(ClassRanks cr) {
 		plugin = cr;
 		db = new DebugManager(cr);
 	}
 
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
-		db.i("isInGroup: player "
-				+ player
-				+ ", world: "
-				+ world
-				+ ", perms: "
-				+ permName
-				+ ": "
-				+ String.valueOf(permissionHandler.getUser(player).inGroup(
-						permName)));
-
-		return permissionHandler.getUser(player).inGroup(permName);
+		return permission.playerInGroup(world, player, permName);
 	}
 
+	/*
+	 * Function that tries to setup the permissions system, returns result
+	 */
 	@Override
 	public boolean setupPermissions() {
-		// try to fetch the PEX handler, return result
-
-		permissionHandler = ru.tehkode.permissions.bukkit.PermissionsEx
-				.getPermissionManager();
-		if (permissionHandler == null) {
-			db.i("PEX not found");
-			return false;
-		}
-		plugin.log("<3 PEX", Level.INFO); // success!
-		return true;
+		// try to load permissions, return result
+		RegisteredServiceProvider<Permission> permissionProvider = Bukkit.getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+        if (permissionProvider != null) {
+        	try {
+                permission = permissionProvider.getProvider();
+                getPermNameByPlayer(Bukkit.getWorlds().get(0).getName(), "slipcor");
+        	} catch (Exception e) {
+        		permission = null;
+        	}
+        }
+        return (permission != null);
 	}
 
 	@Override
 	public boolean hasPerms(Player comP, String string, String world) {
-		db.i("player hasPerms: "
-				+ comP.getName()
-				+ ", world: "
-				+ world
-				+ ", perm: "
-				+ string
-				+ " : "
-				+ String.valueOf(comP.hasPermission(string) ? true
-						: permissionHandler.has(comP.getName(), string, world)));
-		return comP.hasPermission(string) ? true : permissionHandler.has(
-				comP.getName(), string, world);
+		return permission.has(world, comP.getName(), string);
 	}
 
+	/*
+	 * Add a user to a given class in the given world
+	 */
 	@Override
 	public void classAdd(String world, String player, String cString) {
+		
 		player = PlayerManager.search(player); // auto-complete playername
 
 		if (world.equalsIgnoreCase("all")) {
@@ -83,7 +72,7 @@ public class HandlePEX extends CRHandler {
 			return;
 		}
 		try {
-			permissionHandler.getUser(player).addGroup(cString, world);
+			permission.playerAddGroup(world, player, cString);
 			db.i("added group " + cString + " to player " + player
 					+ " in world " + world);
 		} catch (Exception e) {
@@ -92,16 +81,19 @@ public class HandlePEX extends CRHandler {
 		}
 	}
 
+	/*
+	 * Add a user to a given rank in the given world
+	 */
 	@Override
 	public void rankAdd(String world, String player, String rank) {
 		player = PlayerManager.search(player); // auto-complete playername
-		
+
 		if (world.equalsIgnoreCase("all")) {
 			rankAddGlobal(player, rank);
 			return;
 		}
 		try {
-			permissionHandler.getUser(player).addGroup(rank, world);
+			permission.playerAddGroup(world, player, rank);
 			db.i("added rank " + rank + " to player " + player
 					+ " in world " + world);
 		} catch (Exception e) {
@@ -110,17 +102,19 @@ public class HandlePEX extends CRHandler {
 		}
 	}
 
+	/*
+	 * Remove a user from the class he has in the given world
+	 */
 	@Override
 	public void rankRemove(String world, String player, String cString) {
 		player = PlayerManager.search(player); // auto-complete playername
-		
+
 		if (world.equalsIgnoreCase("all")) {
 			rankRemoveGlobal(player, cString);
 			return;
 		}
 		try {
-			permissionHandler.getUser(player).removeGroup(cString,
-					world);
+			permission.playerRemoveGroup(world, player, cString);
 			db.i("removed rank " + cString + " from player " + player
 					+ " in world " + world);
 		} catch (Exception e) {
@@ -131,18 +125,20 @@ public class HandlePEX extends CRHandler {
 
 	@Override
 	public String getPermNameByPlayer(String world, String player) {
-		ArrayList<String> permGroups = new ArrayList<String>();
 		player = PlayerManager.search(player); // auto-complete playername
-		
+		ArrayList<String> permGroups = new ArrayList<String>();
+
 		if (world.equalsIgnoreCase("all")) {
 			return getPermNameByPlayerGlobal(player);
 		}
-		String[] groups = permissionHandler.getUser(player)
-				.getGroupsNames(world);
-
-		for (String group : groups)
-			permGroups.add(group);
-
+		db.i("checking world "+world);
+		String[] list = permission.getPlayerGroups(world, player);
+		for (String sRank : list) {
+			db.i("checking rank "+sRank);
+			if (ClassManager.rankExists(sRank)) {
+				permGroups.add(sRank);
+			}
+		}
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
 	}
@@ -150,10 +146,9 @@ public class HandlePEX extends CRHandler {
 	@Override
 	public void classAddGlobal(String player, String cString) {
 		player = PlayerManager.search(player); // auto-complete playername
-
 		try {
-			permissionHandler.getUser(player).addGroup(cString);
-			db.i("added group " + cString + " to player " + player);
+			permission.playerAddGroup(Bukkit.getPlayer(player), cString);
+			db.i("added rank " + cString + " to player " + player);
 		} catch (Exception e) {
 			plugin.log("PermName " + cString + " or user " + player
 					+ " not found", Level.WARNING);
@@ -163,9 +158,8 @@ public class HandlePEX extends CRHandler {
 	@Override
 	public void rankAddGlobal(String player, String rank) {
 		player = PlayerManager.search(player); // auto-complete playername
-		
 		try {
-			permissionHandler.getUser(player).addGroup(rank);
+			permission.playerAddGroup(Bukkit.getPlayer(player), rank);
 			db.i("added rank " + rank + " to player " + player);
 		} catch (Exception e) {
 			plugin.log("PermName " + rank + " or user " + player
@@ -175,28 +169,30 @@ public class HandlePEX extends CRHandler {
 
 	@Override
 	public void rankRemoveGlobal(String player, String cString) {
+
 		player = PlayerManager.search(player); // auto-complete playername
-		
+
 		try {
-			permissionHandler.getUser(player).removeGroup(cString);
-			db.i("added rank " + cString + " to player " + player);
+			permission.playerRemoveGroup(Bukkit.getPlayer(player), cString);
+			db.i("removed rank " + cString + " from player " + player);
 		} catch (Exception e) {
 			plugin.log("PermName " + cString + " or user " + player
-					+ " not found", Level.WARNING);
+					+ " not found ", Level.WARNING);
 		}
 	}
 
 	@Override
 	public String getPermNameByPlayerGlobal(String player) {
-		ArrayList<String> permGroups = new ArrayList<String>();
 		player = PlayerManager.search(player); // auto-complete playername
+		ArrayList<String> permGroups = new ArrayList<String>();
 		
-		String[] groups = permissionHandler.getUser(player)
-				.getGroupsNames();
-
-		for (String group : groups)
-			permGroups.add(group);
-
+		String[] list = permission.getPlayerGroups(Bukkit.getPlayer(player));
+		for (String sRank : list) {
+			db.i("checking rank "+sRank);
+			if (ClassManager.rankExists(sRank)) {
+				permGroups.add(sRank);
+			}
+		}
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
 	}

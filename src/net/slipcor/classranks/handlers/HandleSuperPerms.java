@@ -13,7 +13,7 @@ import net.slipcor.classranks.managers.DebugManager;
 /**
  * SuperPermissions handler class
  * 
- * @version v0.3.0 
+ * @version v0.3.2
  * 
  * @author slipcor
  */
@@ -117,5 +117,25 @@ public class HandleSuperPerms extends CRHandler {
 		
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
+	}
+
+	@Override
+	public void classAddGlobal(String player, String cString) {
+		classAdd(null, player, cString);
+	}
+
+	@Override
+	public void rankAddGlobal(String player, String rank) {
+		rankAdd(null, player, rank);
+	}
+
+	@Override
+	public void rankRemoveGlobal(String player, String cString) {
+		rankRemove(null, player, cString);
+	}
+
+	@Override
+	public String getPermNameByPlayerGlobal(String player) {
+		return getPermNameByPlayer(null, player);
 	}
 }

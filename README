@@ -1,6 +1,11 @@
 CHANGELOG
 
+v0.4
+    v0.4.0 - Vault support
+    
 v0.3
+    v0.3.1 - edit the message prefix by setting "prefix" in the config
+    v0.3.0.7 - fix custom EXP and PRICE not working
     v0.3.0 - another big rewrite to activate exp/cost/items setting for each rank
 
 v0.2
