@@ -5,6 +5,7 @@ rankpublic: true
 trackRanks: false
 defaultrankallworlds: false
 onlyoneclass: true
+clearranks: false
 signcheck: false
 signchoose: '[choose]'
 signrankup: '[rankup]'
@@ -14,6 +15,8 @@ debug: false
 checkprices: true
 checkitems: true
 checkexp: true
+vaultpermissions: true
+vaulteconomy: true
 prefix: ClassRanks
 
 #----------------#

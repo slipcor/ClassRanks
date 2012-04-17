@@ -18,7 +18,7 @@ import de.bananaco.bpermissions.api.util.CalculableType;
 /**
  * bPermissions handler class
  * 
- * @version v0.3.2
+ * @version v0.4.3
  * 
  * @author slipcor
  */
@@ -194,5 +194,14 @@ public class HandleBPerms extends CRHandler {
 	@Override
 	public String getPermNameByPlayerGlobal(String player) {
 		return null;
+	}
+
+	@Override
+	public void removeGroups(Player player) {
+		String[] list = ApiLayer.getGroups(player.getWorld().getName(), CalculableType.USER, player.getName());
+		for (String group : list) {
+			ApiLayer.removeGroup(player.getWorld().getName(), CalculableType.USER, player.getName(),
+					group);
+		}
 	}
 }

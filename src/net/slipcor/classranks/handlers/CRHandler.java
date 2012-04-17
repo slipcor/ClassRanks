@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 /**
  * Permissions handler class
  * 
- * @version v0.3.2 
+ * @version v0.4.3
  * 
  * @author slipcor
  */
@@ -22,4 +22,5 @@ public abstract class CRHandler {
 	public abstract void rankRemoveGlobal(String player, String cString);
 	public abstract String getPermNameByPlayer(String world, String player);
 	public abstract String getPermNameByPlayerGlobal(String player);
+	public abstract void removeGroups(Player player);
 }

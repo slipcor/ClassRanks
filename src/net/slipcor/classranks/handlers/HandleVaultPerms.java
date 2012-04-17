@@ -16,7 +16,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 /**
  * Vault permissions handler class
  * 
- * @version v0.3.2 
+ * @version v0.4.3
  * 
  * @author slipcor
  */
@@ -195,5 +195,14 @@ public class HandleVaultPerms extends CRHandler {
 		}
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
+	}
+
+	@Override
+	public void removeGroups(Player player) {
+		String[] list = permission.getPlayerGroups(player);
+
+		for (String sRank : list) {
+			permission.playerRemoveGroup(player, sRank);
+		}
 	}
 }

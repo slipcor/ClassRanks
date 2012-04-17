@@ -1,6 +1,9 @@
 CHANGELOG
 
 v0.4
+    v0.4.3 - config setting to remove all perm groups on class select
+    v0.4.2 - Vault disabling for either Economy or Permissions
+    v0.4.1 - Vault disabling via config
     v0.4.0 - Vault support
     
 v0.3

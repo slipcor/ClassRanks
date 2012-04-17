@@ -15,7 +15,7 @@ import ru.tehkode.permissions.PermissionManager;
 /**
  * PermissionsEX handler class
  * 
- * @version v0.3.2
+ * @version v0.4.3
  * 
  * @author slipcor
  */
@@ -199,5 +199,15 @@ public class HandlePEX extends CRHandler {
 
 		db.i("player has groups: " + permGroups.toString());
 		return ClassManager.getLastPermNameByPermGroups(permGroups);
+	}
+
+	@Override
+	public void removeGroups(Player player) {
+		String[] groups = permissionHandler.getUser(player)
+				.getGroupsNames();
+
+		for (String group : groups) {
+			permissionHandler.getUser(player).removeGroup(group);
+		}
 	}
 }

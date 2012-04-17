@@ -16,7 +16,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * command manager class
  * 
- * @version v0.4.0
+ * @version v0.4.3
  * 
  * @author slipcor
  */
@@ -614,7 +614,7 @@ public class CommandManager {
 						+ "!");
 				return true;
 			}
-
+			
 			String s = "";
 
 			if (plugin.trackRanks) {
@@ -737,6 +737,10 @@ public class CommandManager {
 			ChatColor c_Color = rank.getColor(); // Rank color
 
 			// success!
+			
+			if (plugin.getConfig().getBoolean("clearranks")) {
+				plugin.perms.removeGroups(pPlayer);
+			}
 
 			plugin.perms.rankAdd(defaultrankallworlds ? "all" : pPlayer
 					.getWorld().getName(), pPlayer.getName(), cPermName);
