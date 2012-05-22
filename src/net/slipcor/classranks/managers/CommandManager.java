@@ -1,5 +1,6 @@
 package net.slipcor.classranks.managers;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
 
 import net.slipcor.classranks.ClassRanks;
@@ -219,12 +220,15 @@ public class CommandManager {
 				if (exp_cost > 0) {
 					if (comP.getTotalExperience() < exp_cost) {
 						plugin.msg(comP,
-								"You don't have enough experience! You need "
+								"You don't have enough experience ("+comP.getTotalExperience()+")! You need "
 										+ exp_cost);
 						return true;
 					}
-					comP.setTotalExperience(comP.getTotalExperience()
-							- exp_cost);
+					int newExp = comP.getTotalExperience() - exp_cost;
+					comP.setExp(0);
+					comP.setLevel(0);
+					comP.giveExp(newExp);
+					
 					plugin.msg(comP, "You paid " + exp_cost
 							+ " experience points!");
 				}
@@ -596,6 +600,21 @@ public class CommandManager {
 				plugin.msg(pPlayer, "Not enough arguments!");
 				return true;
 
+			} else if (args[0].equalsIgnoreCase("list")) {
+				ArrayList<Class> classes = ClassManager.getClasses();
+				plugin.msg(pPlayer, "Class List");
+				plugin.msg(pPlayer, "--------------------");
+				
+				for (Class c : classes) {
+					if (c.name.startsWith("%") && !pPlayer.isOp()) {
+						continue;
+					}
+					plugin.msg(pPlayer, "Class §a" + c.name);
+					for (Rank r : c.ranks) {
+						plugin.msg(pPlayer, "=> " + r.getColor() + r.getDispName());
+					}
+				}
+				return true;
 			}
 
 			// /class [classname]
