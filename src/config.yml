@@ -1,0 +1,101 @@
+#------------------#
+# General Settings #
+#------------------#
+rankpublic: true
+trackRanks: false
+defaultrankallworlds: false
+onlyoneclass: true
+clearranks: false
+signcheck: false
+signchoose: '[choose]'
+signrankup: '[rankup]'
+signrankdown: '[rankdown]'
+cooldown: 0
+debug: false
+checkprices: true
+checkitems: true
+checkexp: true
+vaultpermissions: true
+vaulteconomy: true
+prefix: ClassRanks
+
+#----------------#
+# Color Settings #
+#----------------#
+playercolor: '&e'
+worldcolor: '&6'
+
+classes:
+    Fighter:
+        Warrior:
+            name: 'Warrior I'
+            color: '&7'
+            price: 10.00
+        SWarrior:
+            name: 'Warrior II'
+            color: '&7'
+            price: 50.00
+        MWarrior:
+            name: 'Warrior III'
+            color: '&8'
+            price: 100.00
+    Business:
+        Trader:
+            name: 'Trader I'
+            color: '&a'
+            price: 10.00
+        STrader:
+            name: 'Trader II'
+            color: '&a'
+            price: 50.00
+            items:
+            - 'GOLD_INGOT:3'
+            - 'IRON_INGOT:3'
+        MTrader:
+            name: 'Trader III'
+            color: '&2'
+            price: 100.00
+
+
+#---------------------#
+# Money Cost Settings #
+#---------------------#
+prices:
+    I: '10.00'
+    II: '50.00'
+    III: '100.00'
+
+#--------------------#
+# Item Cost Settings #
+#--------------------#
+items:
+    I:
+    - 'REDSTONE:2'
+    - 'COAL:2'
+    II:
+    - 'GOLD_INGOT:2'
+    - 'IRON_INGOT:3'
+    III:
+    - 'DIAMOND:5'
+    - 'LAPIS_BLOCK:5'
+
+#-------------------#
+# EXP Cost Settings #
+#-------------------#
+exp:
+    I: '10'
+    II: '50'
+    III: '100'
+
+#---------#
+# Players #
+#---------#
+
+players:
+    Notch:
+        Fighter: Warrior
+
+#------------------#
+# Config debugging #
+#------------------#
+cversion: '0300'
