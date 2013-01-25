@@ -16,9 +16,9 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 /**
  * Vault permissions handler class
  * 
- * @version v0.4.3
+ * @version v0.4.4 - pull by Krglok
  * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class HandleVaultPerms extends CRHandler {
@@ -56,29 +56,16 @@ public class HandleVaultPerms extends CRHandler {
 
 	@Override
 	public boolean hasPerms(Player comP, String string, String world) {
-		return permission.has(world, comP.getName(), string);
+		return comP.hasPermission(string) || permission.has(world, comP.getName(), string);
 	}
 
 	/*
 	 * Add a user to a given class in the given world
 	 */
 	@Override
+	@Deprecated
 	public void classAdd(String world, String player, String cString) {
-		
-		player = PlayerManager.search(player); // auto-complete playername
-
-		if (world.equalsIgnoreCase("all")) {
-			classAddGlobal(player, cString);
-			return;
-		}
-		try {
-			permission.playerAddGroup(world, player, cString);
-			db.i("added group " + cString + " to player " + player
-					+ " in world " + world);
-		} catch (Exception e) {
-			plugin.log("PermName " + cString + " or user " + player
-					+ " not found in world " + world, Level.WARNING);
-		}
+		rankAdd(world, player, cString);
 	}
 
 	/*
@@ -93,12 +80,13 @@ public class HandleVaultPerms extends CRHandler {
 			return;
 		}
 		try {
-			permission.playerAddGroup(world, player, rank);
-			db.i("added rank " + rank + " to player " + player
-					+ " in world " + world);
+			if (permission.playerAddGroup(world, player, rank)) {
+				db.i("added rank " + rank + " to player " + player + " in world " + world);
+			} else {
+				db.i("Vault error trying to add rank " + rank + " to player " + player + " in world " + world);
+			}
 		} catch (Exception e) {
-			plugin.log("PermName " + rank + " or user " + player
-					+ " not found in world " + world, Level.WARNING);
+			plugin.log("Exception adding PermName " + rank + " to user " + player + " in world " + world, Level.WARNING);
 		}
 	}
 
@@ -144,15 +132,9 @@ public class HandleVaultPerms extends CRHandler {
 	}
 
 	@Override
+	@Deprecated
 	public void classAddGlobal(String player, String cString) {
-		player = PlayerManager.search(player); // auto-complete playername
-		try {
-			permission.playerAddGroup(Bukkit.getPlayer(player), cString);
-			db.i("added rank " + cString + " to player " + player);
-		} catch (Exception e) {
-			plugin.log("PermName " + cString + " or user " + player
-					+ " not found", Level.WARNING);
-		}
+		rankAddGlobal(player, cString);
 	}
 
 	@Override
@@ -200,7 +182,9 @@ public class HandleVaultPerms extends CRHandler {
 	@Override
 	public void removeGroups(Player player) {
 		String[] list = permission.getPlayerGroups(player);
-
+		if (list == null) {
+			return;
+		}
 		for (String sRank : list) {
 			permission.playerRemoveGroup(player, sRank);
 		}

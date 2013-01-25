@@ -33,9 +33,9 @@ import net.slipcor.classranks.register.payment.Method;
 /**
  * main plugin class
  * 
- * @version v0.3.1
+ * @version v0.4.4 - pull by Krglok
  * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class ClassRanks extends JavaPlugin {
@@ -58,24 +58,28 @@ public class ClassRanks extends JavaPlugin {
 		@SuppressWarnings("unused")
 		ClassManager cm = new ClassManager(this);
 
+		// register commands
 		getCommand("class").setExecutor(new ClassCommand(this, cmdMgr));
-		getCommand("classadmin").setExecutor(
-				new ClassAdminCommand(this, cmdMgr));
+		getCommand("classadmin").setExecutor(new ClassAdminCommand(this, cmdMgr));
 		getCommand("rankup").setExecutor(new RankupCommand(this, cmdMgr));
 		getCommand("rankdown").setExecutor(new RankdownCommand(this, cmdMgr));
 
-		load_config(); // load the config file
+		// load the config file
+		load_config();
 
+		// load Vault
 		if (pm.getPlugin("Vault") != null) {
 			db.i("Vault found!");
 			if (getConfig().getBoolean("vaultpermissions")) {
 				this.perms = new HandleVaultPerms(this);
 			}
+			log("Vault Plugin found, hooking Permissions!", Level.INFO);
 			if (getConfig().getBoolean("vaulteconomy")) {
 				setupEconomy();
 			}
 		}
 		
+		// backup permissions
 		if (this.perms == null || (this.perms != null && !this.perms.setupPermissions())) {
 		
 			if (pm.getPlugin("bPermissions") != null) {
@@ -96,7 +100,7 @@ public class ClassRanks extends JavaPlugin {
 		tracker.start();
 		Update.updateCheck(this);
 
-		log("v" + this.getDescription().getVersion() + " enabled", Level.INFO);
+		log("version " + this.getDescription().getVersion() + " enabled", Level.INFO);
 	}
 
 	@Override
@@ -274,11 +278,11 @@ public class ClassRanks extends JavaPlugin {
 				}
 				if (getConfig().get(
 						"classes." + sClassName + "." + sRankName + ".items") != null) {
-					rankItems = FormatManager
-							.getItemStacksFromStringList(getConfig()
-									.getStringList(
+					rankItems = getConfig().getBoolean("checkitems")?
+							FormatManager.getItemStacksFromStringList(
+									getConfig().getStringList(
 											"classes." + sClassName + "."
-													+ sRankName + ".items"));
+													+ sRankName + ".items")):null;
 				}
 				if (getConfig().get(
 						"classes." + sClassName + "." + sRankName + ".exp") != null) {

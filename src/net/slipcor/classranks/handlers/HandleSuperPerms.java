@@ -13,9 +13,9 @@ import net.slipcor.classranks.managers.DebugManager;
 /**
  * SuperPermissions handler class
  * 
- * @version v0.4.3
+ * @version v0.4.4 - pull by Krglok
  * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class HandleSuperPerms extends CRHandler {
@@ -58,22 +58,11 @@ public class HandleSuperPerms extends CRHandler {
 		db.i("player hasPerms: " + comP.getName() + ", world: " + world + ", perm: "  + string + " : " + String.valueOf( comP.hasPermission(string)));
 		return comP.hasPermission(string);
 	}
-
-    
-	/*
-     * Add a user to a given class in the given world
-     */
+	
 	@Override
+	@Deprecated
 	public void classAdd(String world, String player, String cString) {
-		String firstRank = null;
-		if (plugin.trackRanks) {
-			firstRank = ClassManager.getFirstPermNameByClassName(cString, player);
-		} else {
-			firstRank = ClassManager.getFirstPermNameByClassName(cString);
-		}
-		plugin.getConfig().set("players." + player + "." + cString, firstRank);
-		db.i("added group " + cString + " to player " + player + ", no world support");
-		plugin.saveConfig();
+		rankAdd(world, player, cString);
 	}
 
     /*
@@ -120,8 +109,9 @@ public class HandleSuperPerms extends CRHandler {
 	}
 
 	@Override
+	@Deprecated
 	public void classAddGlobal(String player, String cString) {
-		classAdd(null, player, cString);
+		rankAddGlobal(player, cString);
 	}
 
 	@Override

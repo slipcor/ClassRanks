@@ -14,18 +14,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-/*
+/**
  * Player manager class
  * 
- * v0.2.0 - mayor rewrite; no SQL; multiPermissions
+ * @version v0.4.4 - pull by Krglok
  * 
- * History:
- * 
- *     v0.1.6 - cleanup
- *     v0.1.5.1 - cleanup
- *     v0.1.5.0 - more fixes, update to CB #1337
- * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class PlayerManager {
@@ -116,11 +110,18 @@ public class PlayerManager {
 				e.printStackTrace();
 			}
         	plugin.log("CoolDown file loaded!", Level.INFO);
-        } else {
-        	Map<String, Object> cdx = new HashMap<String, Object>();
-        	cdx.put("slipcor", 0);
-        	config.addDefault("cooldown", cdx);
         }
+        
+    	Map<String, Object> cdx = new HashMap<String, Object>();
+    	cdx.put("slipcor", 0);
+    	config.addDefault("cooldown", cdx);
+    	
+        try {
+			config.save(fConfig);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         
         Map<String, Object> cds = (Map<String, Object>) config.getConfigurationSection("cooldown").getValues(true);
         int now = Math.round((System.currentTimeMillis() % (60*60*24*1000)) /1000);

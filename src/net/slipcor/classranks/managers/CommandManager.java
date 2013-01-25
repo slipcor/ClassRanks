@@ -17,9 +17,9 @@ import org.bukkit.inventory.ItemStack;
 /**
  * command manager class
  * 
- * @version v0.4.3
+ * @version v0.4.4 - pull by Krglok
  * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class CommandManager {
@@ -52,8 +52,7 @@ public class CommandManager {
 	 * new rank
 	 */
 	public boolean rank(String[] args, Player comP) {
-		db.i("ranking " + comP.getName() + " : "
-				+ FormatManager.formatStringArray(args));
+		db.i("ranking " + comP.getName() + " : " + FormatManager.formatStringArray(args));
 		int cDown = pm.coolDownCheck(comP);
 		if (cDown > 0) {
 			plugin.msg(comP,
@@ -154,12 +153,12 @@ public class CommandManager {
 				}
 
 				if (ClassRanks.economy != null) {
-					
+					/*
 					if (ClassRanks.economy.hasAccount(comP.getName())) {
 						plugin.log("Account not found: " + comP.getName(),
 								Level.SEVERE);
 						return true;
-					}
+					}*/
 					if (!ClassRanks.economy.has(comP.getName(), rank_cost)) {
 						// no money, no ranking!
 						plugin.msg(comP,
@@ -297,38 +296,70 @@ public class CommandManager {
 		}
 		return true;
 	}
+	
+	private void cmdGet(Player pPlayer, String[] args) {
+		String world = pPlayer.getWorld().getName();
+		if (args.length > 2) {
+			world = args[2];
+		} else {
+			world = "all";
+		}
+		if (args.length == 1) {
+			args[1] = pPlayer.getName();
+		} else {
+			args[1] = PlayerManager.search(args[1]);
+		}
 
+		Rank rank = ClassManager.getRankByPermName(plugin.perms.getPermNameByPlayer(world, args[1]));
+
+		if (rank == null) {
+			plugin.msg(pPlayer, "Player " + fm.formatPlayer(args[1])
+					+ " has no class in " + fm.formatWorld(world) + "!");
+		} else {
+
+			String cDispName = rank.getDispName(); // Display rank name
+			ChatColor c_Color = rank.getColor(); // Rank color
+
+			plugin.msg(pPlayer, "Player " + fm.formatPlayer(args[1])
+					+ " is " + c_Color + cDispName + ChatColor.WHITE
+					+ " in " + fm.formatWorld(world) + "!");
+		}
+	}
+	
+	/**
+	 * printout Classas and/or Class Ranks
+	 * 
+	 * @param pPlayer
+	 * @param args
+	 */
+	private void cmdList (Player pPlayer, String[] args) {
+		// Command list of Ranks in the Class
+		ArrayList<Class> classes = ClassManager.getClasses();
+		plugin.msg(pPlayer, ChatColor.YELLOW+"Class List");
+		plugin.msg(pPlayer, ChatColor.YELLOW+"--------------------");
+		
+		for (Class c : classes) {
+			if (c.name.startsWith("%") && !pPlayer.isOp()) {
+				continue;
+			}
+			if (args.length > 1 && args[1].equalsIgnoreCase(c.name)) {
+				plugin.msg(pPlayer, "Class "+ ChatColor.GREEN + c.name);
+				for (Rank r : c.ranks) {
+					plugin.msg(pPlayer, "=> " + r.getColor() + r.getDispName());
+				}
+			}
+		}
+	}
 	/*
 	 * The main switch for the command usage. Check for known commands,
 	 * permissions, arguments, and commit whatever is wanted.
 	 */
 	public boolean parseCommand(Player pPlayer, String[] args) {
 
-		db.i("parsing player " + pPlayer + ", command: "
-				+ FormatManager.formatStringArray(args));
+		db.i("parsing player " + pPlayer + ", command: " + FormatManager.formatStringArray(args));
 		if (args.length > 1) {
 			if (args[0].equalsIgnoreCase("get")) {
-				String world = pPlayer.getWorld().getName();
-				if (args.length > 2) {
-					world = args[2];
-				}
-				args[1] = PlayerManager.search(args[1]);
-
-				Rank rank = ClassManager.getRankByPermName(plugin.perms
-						.getPermNameByPlayer(world, args[1]));
-
-				if (rank == null) {
-					plugin.msg(pPlayer, "Player " + fm.formatPlayer(args[1])
-							+ " has no class in " + fm.formatWorld(world) + "!");
-				} else {
-
-					String cDispName = rank.getDispName(); // Display rank name
-					ChatColor c_Color = rank.getColor(); // Rank color
-
-					plugin.msg(pPlayer, "Player " + fm.formatPlayer(args[1])
-							+ " is " + c_Color + cDispName + ChatColor.WHITE
-							+ " in " + fm.formatWorld(world) + "!");
-				}
+				cmdGet(pPlayer, args);
 				return true;
 			}
 
@@ -376,7 +407,8 @@ public class CommandManager {
 					world = args[3];
 				} else if (args.length == 3) {
 					// => /class add *name* *classname*
-					self = false;
+					String[] tArgs = { args[0], args[1] , args[2] };
+					args = tArgs; // override : without world //krglok
 				} else if (args.length == 2) {
 					// => /class add *classname*
 
@@ -418,7 +450,7 @@ public class CommandManager {
 				while (!sPermName.equals("")) {
 					db.i("removing rank " + sPermName);
 
-					Rank tempRank = ClassManager.getRankByPermName(sPermName);
+					Rank tempRank = ClassManager.getRankByPermName(ClassManager.getFirstPermNameByClassName(sPermName));
 
 					String cDispName = tempRank.getDispName(); // Display rank
 																// name
@@ -497,7 +529,7 @@ public class CommandManager {
 
 			if (tempRank == null) {
 				plugin.msg(pPlayer,
-						"The class you have entered does not exist!");
+						"The class does not exist: "+args[2]);
 				return true;
 			}
 
@@ -506,7 +538,7 @@ public class CommandManager {
 			ChatColor c_Color = tempRank.getColor(); // Rank color
 
 			if (plugin.trackRanks) {
-				int rID = ClassManager.loadClassProcess(
+				int rID = ClassManager.loadClassProgess(
 						Bukkit.getPlayer(args[1]), tempRank.getSuperClass());
 
 				tempRank = tempRank.getSuperClass().ranks.get(rID);
@@ -518,7 +550,7 @@ public class CommandManager {
 				String sRank = tempRank.getPermName();
 				plugin.perms.rankAdd(world, args[1], sRank);
 			} else {
-				plugin.perms.classAdd(world, args[1], cPermName);
+				plugin.perms.rankAdd(world, args[1], cPermName);
 			}
 
 			if ((rankpublic) || (!pPlayer.getName().equalsIgnoreCase(args[1]))) {
@@ -597,23 +629,12 @@ public class CommandManager {
 										: pPlayer.getWorld().getName()) + "!");
 				return true;
 			} else if (args[0].equalsIgnoreCase("add")) {
-				plugin.msg(pPlayer, "Not enough arguments!");
+				plugin.msg(pPlayer, ChatColor.RED+"Not enough arguments!");
+				plugin.msg(pPlayer, ChatColor.GRAY+"/class [add] {username} {classname} {world} | Add user to a class");
 				return true;
 
 			} else if (args[0].equalsIgnoreCase("list")) {
-				ArrayList<Class> classes = ClassManager.getClasses();
-				plugin.msg(pPlayer, "Class List");
-				plugin.msg(pPlayer, "--------------------");
-				
-				for (Class c : classes) {
-					if (c.name.startsWith("%") && !pPlayer.isOp()) {
-						continue;
-					}
-					plugin.msg(pPlayer, "Class §a" + c.name);
-					for (Rank r : c.ranks) {
-						plugin.msg(pPlayer, "=> " + r.getColor() + r.getDispName());
-					}
-				}
+				cmdList(pPlayer, args);
 				return true;
 			}
 
@@ -642,6 +663,8 @@ public class CommandManager {
 			} else {
 				s = ClassManager.getFirstPermNameByClassName(args[0]);
 			}
+			
+			db.i("Rank: " + s);
 
 			if (s == null || s.equals("")) {
 				plugin.msg(pPlayer,
@@ -658,7 +681,7 @@ public class CommandManager {
 
 			int rID = 0;
 			if (plugin.trackRanks) {
-				rID = ClassManager.loadClassProcess(pPlayer,
+				rID = ClassManager.loadClassProgess(pPlayer,
 						rank.getSuperClass());
 			}
 			double rank_cost = 0D;

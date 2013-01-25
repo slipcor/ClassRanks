@@ -18,9 +18,9 @@ import de.bananaco.bpermissions.api.util.CalculableType;
 /**
  * bPermissions handler class
  * 
- * @version v0.4.3
+ * @version v0.4.4 - pull by Krglok
  * 
- * @author slipcor
+ * @author slipcor,Krglok
  */
 
 public class HandleBPerms extends CRHandler {
@@ -34,8 +34,7 @@ public class HandleBPerms extends CRHandler {
 
 	@Override
 	public boolean isInGroup(String world, String permName, String player) {
-		return ApiLayer.hasGroupRecursive(world, CalculableType.USER, player,
-				permName);
+		return ApiLayer.hasGroup(world, CalculableType.USER, player, permName);
 	}
 
 	/*
@@ -77,8 +76,7 @@ public class HandleBPerms extends CRHandler {
 		}
 		for (int i = 0; i < worlds.length; i++) {
 			try {
-				ApiLayer.addGroup(worlds[i], CalculableType.USER, player,
-						cString);
+				ApiLayer.addGroup(worlds[i], CalculableType.USER, player, cString);
 				db.i("added group " + cString + " to player " + player
 						+ " in world " + worlds[i]);
 			} catch (Exception e) {
@@ -177,6 +175,7 @@ public class HandleBPerms extends CRHandler {
 	}
 
 	@Override
+	@Deprecated
 	public void classAddGlobal(String player, String cString) {
 		
 	}

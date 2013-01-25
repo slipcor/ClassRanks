@@ -14,7 +14,7 @@ import org.bukkit.inventory.ItemStack;
 /**
  * class manager class
  * 
- * @version v0.3.0 
+ * @version v0.4.4
  * 
  * @author slipcor
  */
@@ -46,9 +46,11 @@ public class ClassManager {
 
 	public static String getFirstPermNameByClassName(String cString, String sPlayer) {
 		// extended version: get rank
+		db.i("getting first perm name by class name: " + cString + " / " + sPlayer);
 		for (Class c : classes) {
-			if (c.name.equals(cString))
-				return c.ranks.get(ClassManager.loadClassProcess(Bukkit.getPlayer(sPlayer), c)).getPermName();
+			if (c.name.equals(cString)) {
+				return c.ranks.get(ClassManager.loadClassProgess(Bukkit.getPlayer(sPlayer), c)).getPermName();
+			}
 		}
 		return null;
 	}
@@ -231,8 +233,8 @@ public class ClassManager {
 			c[classID] = String.valueOf(rankID).charAt(0);
 			db.i("new c[classID]: "+c[classID]);
 
-			db.i("saving: "+c.toString());
-			plugin.getConfig().set("progress."+pPlayer.getName(), String.valueOf(c.toString()));
+			db.i("saving: "+new String(c));
+			plugin.getConfig().set("progress."+pPlayer.getName(), new String(c));
 			
 			return;
 		}
@@ -251,14 +253,17 @@ public class ClassManager {
 		plugin.saveConfig();
 	}
 	
-	public static int loadClassProcess(Player pPlayer, Class cClass) {
+	public static int loadClassProgess(Player pPlayer, Class cClass) {
 		try {
 			String s = plugin.getConfig().getString("progress."+pPlayer.getName());
 			int classID = classes.indexOf(cClass);
 			
+			db.i("getting "+classID+" in "+s);
+			
 			int rankID = Integer.parseInt(String.valueOf(s.charAt(classID)));
 			return rankID;
 		} catch (Exception e) {
+			e.printStackTrace();
 			return 0;
 		}
 	}

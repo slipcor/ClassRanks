@@ -1,6 +1,8 @@
 * CHANGELOG
 *
 * v0.4
+** 0.4.4.3 - method cleanup
+** 0.4.4.2 - pull by Krglok
 ** 0.4.4.1 - fix exp costs not updating the level correctly
 ** 0.4.4 - add /class list
 ** 0.4.3 - config setting to remove all perm groups on class select

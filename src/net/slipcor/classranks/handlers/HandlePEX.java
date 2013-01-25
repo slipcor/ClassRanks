@@ -73,23 +73,11 @@ public class HandlePEX extends CRHandler {
 		return comP.hasPermission(string) ? true : permissionHandler.has(
 				comP.getName(), string, world);
 	}
-
+	
 	@Override
+	@Deprecated
 	public void classAdd(String world, String player, String cString) {
-		player = PlayerManager.search(player); // auto-complete playername
-
-		if (world.equalsIgnoreCase("all")) {
-			classAddGlobal(player, cString);
-			return;
-		}
-		try {
-			permissionHandler.getUser(player).addGroup(cString, world);
-			db.i("added group " + cString + " to player " + player
-					+ " in world " + world);
-		} catch (Exception e) {
-			plugin.log("PermName " + cString + " or user " + player
-					+ " not found in world " + world, Level.WARNING);
-		}
+		rankAdd(world, player, cString);
 	}
 
 	@Override
@@ -148,16 +136,9 @@ public class HandlePEX extends CRHandler {
 	}
 
 	@Override
+	@Deprecated
 	public void classAddGlobal(String player, String cString) {
-		player = PlayerManager.search(player); // auto-complete playername
-
-		try {
-			permissionHandler.getUser(player).addGroup(cString);
-			db.i("added group " + cString + " to player " + player);
-		} catch (Exception e) {
-			plugin.log("PermName " + cString + " or user " + player
-					+ " not found", Level.WARNING);
-		}
+		rankAddGlobal(player, cString);
 	}
 
 	@Override
