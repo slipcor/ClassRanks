@@ -1,6 +1,6 @@
 name: ClassRanks
 main: net.slipcor.classranks.ClassRanks
-version: 0.4.4.2
+version: 0.4.4.3
 author: slipcor
 website: http://dev.bukkit.org/server-mods/classranks/
 soft-depends: [bPermissions,iConomy,BOSEconomy,MultiCurrency,Essentials,PermissionsEx,Vault]
